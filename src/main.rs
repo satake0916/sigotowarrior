@@ -1,4 +1,6 @@
 use clap::{Parser, Subcommand};
+use task::Task;
+mod task;
 
 #[derive(Parser)]
 struct AppArg {
@@ -8,18 +10,18 @@ struct AppArg {
 
 #[derive(Subcommand)]
 enum Command {
-    Fue { task: String },
+    Fue { description: String },
 }
 
 fn main() {
     let cli = AppArg::parse();
     if let Some(command) = cli.command {
         match command {
-            Command::Fue { task } => {
+            Command::Fue { description } => {
                 // Add Task
 
                 // Print
-                println!("Add {}", task)
+                println!("Add {}", description)
             }
         }
     } else {
@@ -28,5 +30,14 @@ fn main() {
 
         // Print
         println!("Task1, Task2, Task3...")
+    }
+}
+
+impl Command {
+    fn add_task (task: &String) {
+        // Create Task
+        let task = Task::new(task);
+        // Insert DB
+
     }
 }
