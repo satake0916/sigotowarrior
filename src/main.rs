@@ -1,6 +1,7 @@
 use clap::{Parser, Subcommand};
 use task::Task;
 mod task;
+mod repository;
 
 #[derive(Parser)]
 struct AppArg {
@@ -19,6 +20,7 @@ fn main() {
         match command {
             Command::Fue { description } => {
                 // Add Task
+                Command::add_task(&description);
 
                 // Print
                 println!("Add {}", description)
@@ -34,10 +36,14 @@ fn main() {
 }
 
 impl Command {
-    fn add_task (task: &String) {
+    // REVIEW: It is a little strange that add_task is a method of Command.
+    fn add_task(task: &String) {
+        let home = std::env::var("HOME").unwrap();
         // Create Task
-        let task = Task::new(task);
+        let task: Task = task::Task::Ready(Task::new(task));
         // Insert DB
-
+        let path = home + "/sigo.txt";
+        println!("{}", &path);
+        repository::insert_task(task, path.into());
     }
 }
