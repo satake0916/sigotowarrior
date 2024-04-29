@@ -1,7 +1,7 @@
 use clap::{Parser, Subcommand};
-use task::Task;
-mod task;
+use task::{ReadyTask, Task};
 mod repository;
+mod task;
 
 #[derive(Parser)]
 struct AppArg {
@@ -27,11 +27,10 @@ fn main() {
             }
         }
     } else {
-        // When no subcommand, list tasks
         // List Tasks
-
+        let tasks = Command::list_ready_task();
         // Print
-        println!("Task1, Task2, Task3...")
+        tasks.iter().for_each(|t| println!("{:?}", t));
     }
 }
 
@@ -40,10 +39,16 @@ impl Command {
     fn add_task(task: &String) {
         let home = std::env::var("HOME").unwrap();
         // Create Task
-        let task: Task = task::Task::Ready(Task::new(task));
+        let task = Task::new(task);
         // Insert DB
         let path = home + "/sigo.txt";
         println!("{}", &path);
         repository::insert_task(task, path.into());
+    }
+
+    fn list_ready_task() -> Vec<ReadyTask> {
+        let home = std::env::var("HOME").unwrap();
+        let path = home + "/sigo.txt";
+        repository::read_ready_tasks(&path.into()).unwrap()
     }
 }

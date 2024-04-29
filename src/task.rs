@@ -1,4 +1,4 @@
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Debug)]
 pub enum Task {
@@ -26,11 +26,11 @@ pub struct CompletedTask {
 }
 
 impl Task {
-    pub fn new(description: &String) -> ReadyTask {
+    pub fn new(description: &str) -> ReadyTask {
         let id = 0;
         ReadyTask {
             id: id,
-            description: description.clone(),
+            description: description.to_owned(),
         }
     }
 }
