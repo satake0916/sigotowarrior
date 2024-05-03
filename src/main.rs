@@ -17,6 +17,7 @@ enum Command {
     Fue { description: String },
     Yari { id: u32 },
     Machi { id: u32 },
+    Modo { id: u32 },
     Taiki,
 }
 
@@ -47,6 +48,18 @@ fn main() {
                     Task::Ready(task) => {
                         task.wait(&cfg);
                         println!("Wait {:?}", task)
+                    }
+                    _ => {
+                        // Exception
+                    }
+                }
+            },
+            Command::Modo { id } => {
+                let task = Task::get_by_id(&cfg, id).unwrap();
+                match task {
+                    Task::Waiting(task) => {
+                        task.get_ball(&cfg);
+                        println!("Myball {:?}", task)
                     }
                     _ => {
                         // Exception

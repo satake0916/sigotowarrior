@@ -182,6 +182,13 @@ impl ReadyTask {
         }
     }
 
+    fn from_waiting(waiting_task: &WaitingTask) -> Self {
+        ReadyTask {
+            id: waiting_task.id,
+            description: waiting_task.description.to_owned()
+        }
+    }
+
     pub fn wait(&self, cfg: &MyConfig) {
         ReadyTask::delete_by_id(cfg, self.id);
         WaitingTask::add_task(cfg, WaitingTask::from_ready(self));
@@ -195,11 +202,16 @@ impl WaitingTask {
     create_get_by_id_function!();
     create_delete_by_id_function!();
 
-    pub fn from_ready(ready_task: &ReadyTask) -> Self {
+    fn from_ready(ready_task: &ReadyTask) -> Self {
         Self {
             id: ready_task.id,
             description: ready_task.description.to_owned()
         }
+    }
+
+    pub fn get_ball(&self, cfg: &MyConfig) {
+        WaitingTask::delete_by_id(cfg, self.id);
+        ReadyTask::add_task(cfg, ReadyTask::from_waiting(self));
     }
 }
 impl CompletedTask {
