@@ -36,12 +36,12 @@ fn main() {
                 let new_task = ReadyTask::new(&cfg, &description);
                 ReadyTask::add_task(&cfg, new_task);
                 println!("Add {}", description);
-            },
+            }
             Command::Yari { id } => {
                 let task = Task::get_by_id(&cfg, id).unwrap();
                 task.complete(&cfg);
                 println!("Done {:?}", task);
-            },
+            }
             Command::Machi { id } => {
                 let task = Task::get_by_id(&cfg, id).unwrap();
                 match task {
@@ -53,7 +53,7 @@ fn main() {
                         // Exception
                     }
                 }
-            },
+            }
             Command::Modo { id } => {
                 let task = Task::get_by_id(&cfg, id).unwrap();
                 match task {
@@ -65,7 +65,7 @@ fn main() {
                         // Exception
                     }
                 }
-            },
+            }
             Command::Taiki => {
                 let tasks = WaitingTask::read_tasks(&cfg);
                 tasks.iter().for_each(|t| println!("{:?}", t));
@@ -76,4 +76,3 @@ fn main() {
         tasks.iter().for_each(|t| println!("{:?}", t));
     }
 }
-

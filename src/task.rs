@@ -123,9 +123,9 @@ impl Task {
                 ReadyTask::write_tasks(cfg, after_tasks);
                 CompletedTask {
                     id: task.id,
-                    description: task.description.to_owned()
+                    description: task.description.to_owned(),
                 }
-            },
+            }
             Task::Waiting(task) => {
                 let before_tasks = ReadyTask::read_tasks(cfg).unwrap();
                 let after_tasks = before_tasks
@@ -135,14 +135,14 @@ impl Task {
                 ReadyTask::write_tasks(cfg, after_tasks);
                 CompletedTask {
                     id: task.id,
-                    description: task.description.to_owned()
+                    description: task.description.to_owned(),
                 }
-            },
+            }
             Task::Completed(task) => {
                 // TODO: return Result
                 CompletedTask {
                     id: task.id,
-                    description: task.description.to_owned()
+                    description: task.description.to_owned(),
                 }
             }
         };
@@ -185,7 +185,7 @@ impl ReadyTask {
     fn from_waiting(waiting_task: &WaitingTask) -> Self {
         ReadyTask {
             id: waiting_task.id,
-            description: waiting_task.description.to_owned()
+            description: waiting_task.description.to_owned(),
         }
     }
 
@@ -205,7 +205,7 @@ impl WaitingTask {
     fn from_ready(ready_task: &ReadyTask) -> Self {
         Self {
             id: ready_task.id,
-            description: ready_task.description.to_owned()
+            description: ready_task.description.to_owned(),
         }
     }
 
@@ -219,5 +219,4 @@ impl CompletedTask {
     create_read_tasks_function!();
     create_write_tasks_function!();
     create_get_by_id_function!();
-    create_delete_by_id_function!();
 }
