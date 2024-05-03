@@ -78,6 +78,19 @@ macro_rules! create_get_by_id_function {
     };
 }
 
+macro_rules! create_delete_by_id_function {
+    () => {
+        fn delete_by_id(cfg: &MyConfig, id: u32) {
+            let tasks = Self::read_tasks(cfg).unwrap();
+            let updated_tasks = tasks
+                .into_iter()
+                .filter(|t| t.id != id)
+                .collect::<Vec<Self>>();
+            Self::write_tasks(cfg, updated_tasks);
+        }
+    };
+}
+
 impl Task {
     pub fn get_by_id(cfg: &MyConfig, id: u32) -> Option<Task> {
         let task = ReadyTask::get_by_id(cfg, id);
@@ -159,26 +172,40 @@ impl ReadyTask {
     create_write_tasks_function!();
     create_add_task_function!();
     create_get_by_id_function!();
+    create_delete_by_id_function!();
 
-    pub fn create_task(cfg: &MyConfig, description: &str) {
+    pub fn new(cfg: &MyConfig, description: &str) -> Self {
         let id = Task::issue_task_id(cfg);
-        let task = ReadyTask {
+        Self {
             id: id,
             description: description.to_owned(),
-        };
-        ReadyTask::add_task(cfg, task)
+        }
     }
 
+    pub fn wait(&self, cfg: &MyConfig) {
+        ReadyTask::delete_by_id(cfg, self.id);
+        WaitingTask::add_task(cfg, WaitingTask::from_ready(self));
+    }
 }
 impl WaitingTask {
     const FILE_NAME: &'static str = "waiting_tasks";
     create_read_tasks_function!();
     create_write_tasks_function!();
+    create_add_task_function!();
     create_get_by_id_function!();
+    create_delete_by_id_function!();
+
+    pub fn from_ready(ready_task: &ReadyTask) -> Self {
+        Self {
+            id: ready_task.id,
+            description: ready_task.description.to_owned()
+        }
+    }
 }
 impl CompletedTask {
     const FILE_NAME: &'static str = "completed_tasks";
     create_read_tasks_function!();
     create_write_tasks_function!();
     create_get_by_id_function!();
+    create_delete_by_id_function!();
 }

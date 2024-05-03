@@ -2,7 +2,7 @@ use std::path::PathBuf;
 
 use clap::{Parser, Subcommand};
 use config::MyConfig;
-use task::{ReadyTask, Task};
+use task::{ReadyTask, Task, WaitingTask};
 mod config;
 mod task;
 
@@ -16,6 +16,8 @@ struct AppArg {
 enum Command {
     Fue { description: String },
     Yari { id: u32 },
+    Machi { id: u32 },
+    Taiki,
 }
 
 fn main() {
@@ -30,13 +32,30 @@ fn main() {
     if let Some(command) = cli.command {
         match command {
             Command::Fue { description } => {
-                ReadyTask::create_task(&cfg, &description);
+                let new_task = ReadyTask::new(&cfg, &description);
+                ReadyTask::add_task(&cfg, new_task);
                 println!("Add {}", description);
-            }
+            },
             Command::Yari { id } => {
                 let task = Task::get_by_id(&cfg, id).unwrap();
                 task.complete(&cfg);
                 println!("Done {:?}", task);
+            },
+            Command::Machi { id } => {
+                let task = Task::get_by_id(&cfg, id).unwrap();
+                match task {
+                    Task::Ready(task) => {
+                        task.wait(&cfg);
+                        println!("Wait {:?}", task)
+                    }
+                    _ => {
+                        // Exception
+                    }
+                }
+            },
+            Command::Taiki => {
+                let tasks = WaitingTask::read_tasks(&cfg);
+                tasks.iter().for_each(|t| println!("{:?}", t));
             }
         }
     } else {
