@@ -30,6 +30,9 @@ enum Command {
     Modo { id: u32 },
     Back { id: u32 },
 
+    Hosoku { id: u32, annotation: String },
+    Annotate { id: u32, annotation: String },
+
     Taiki,
     Waiting,
 }
@@ -95,7 +98,10 @@ fn main() {
                         println!("Already waiting task {}", task.id)
                     }
                     Task::Completed(task) => {
-                        println!("Already completed task {}", task.id)
+                        panic!(
+                            "get_by_id function doesnot return completed task {}",
+                            task.id
+                        );
                     }
                 }
             }
@@ -109,15 +115,31 @@ fn main() {
                 };
                 match task {
                     Task::Ready(task) => {
-                        println!("Already ready task {}", task.id);
+                        println!("Already ready sigo {}", task.id);
                     }
                     Task::Waiting(task) => match task.back(&cfg) {
                         Ok(()) => println!("Returning sigo {} '{}'", task.id, task.description),
                         Err(err) => println!("{}", err),
                     },
                     Task::Completed(task) => {
-                        println!("Already completed task {}", task.id);
+                        panic!(
+                            "get_by_id function doesnot return completed task {}",
+                            task.id
+                        );
                     }
+                }
+            }
+            Command::Hosoku { id, annotation } | Command::Annotate { id, annotation } => {
+                let task = match Task::get_by_id(&cfg, id) {
+                    Ok(task) => task,
+                    Err(err) => {
+                        println!("{}", err);
+                        return;
+                    }
+                };
+                match task.annotate(&cfg, &annotation) {
+                    Ok(()) => println!("Annotated sigo {} with '{}'", id, annotation),
+                    Err(err) => println!("{}", err),
                 }
             }
             Command::Taiki | Command::Waiting => {

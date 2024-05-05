@@ -114,9 +114,6 @@ impl Task {
         if let Ok(task) = WaitingTask::get_by_id(cfg, id) {
             return Ok(Task::Waiting(task));
         }
-        if let Ok(task) = CompletedTask::get_by_id(cfg, id) {
-            return Ok(Task::Completed(task));
-        }
         Err(SigoError::TaskNotFound(id))
     }
 
@@ -136,29 +133,60 @@ impl Task {
                 }
             }
             Task::Waiting(task) => {
-                let before_tasks = ReadyTask::read_tasks(cfg)?;
+                let before_tasks = WaitingTask::read_tasks(cfg)?;
                 let after_tasks = before_tasks
                     .into_iter()
                     .filter(|t| t.id != task.id)
-                    .collect::<Vec<ReadyTask>>();
-                ReadyTask::write_tasks(cfg, after_tasks)?;
+                    .collect::<Vec<WaitingTask>>();
+                WaitingTask::write_tasks(cfg, after_tasks)?;
                 CompletedTask {
                     id: task.id,
                     description: task.description.to_owned(),
                 }
             }
-            Task::Completed(task) => {
-                // TODO: return Result
-                CompletedTask {
-                    id: task.id,
-                    description: task.description.to_owned(),
-                }
+            Task::Completed(_) => {
+                panic!("caanot complete completed task");
             }
         };
         let mut completed_tasks = CompletedTask::read_tasks(cfg)?;
         completed_tasks.push(completed_task.clone());
         CompletedTask::write_tasks(cfg, completed_tasks)?;
         Ok(completed_task)
+    }
+
+    pub fn annotate(&self, cfg: &MyConfig, annotate: &str) -> Result<(), SigoError> {
+        match &self {
+            Task::Ready(task) => {
+                let before_tasks = ReadyTask::read_tasks(cfg)?;
+                let mut after_tasks = before_tasks
+                    .into_iter()
+                    .filter(|t| t.id != task.id)
+                    .collect::<Vec<ReadyTask>>();
+                let annotated_task = ReadyTask {
+                    id: task.id,
+                    description: format!("{}\n{}", task.description, annotate),
+                };
+                after_tasks.push(annotated_task);
+                ReadyTask::write_tasks(cfg, after_tasks)?;
+            }
+            Task::Waiting(task) => {
+                let before_tasks = WaitingTask::read_tasks(cfg)?;
+                let mut after_tasks = before_tasks
+                    .into_iter()
+                    .filter(|t| t.id != task.id)
+                    .collect::<Vec<WaitingTask>>();
+                let annotated_task = WaitingTask {
+                    id: task.id,
+                    description: format!("{}\n{}", task.description, annotate),
+                };
+                after_tasks.push(annotated_task);
+                WaitingTask::write_tasks(cfg, after_tasks)?;
+            }
+            Task::Completed(_) => {
+                panic!("cannot annotate completed task");
+            }
+        };
+        Ok(())
     }
 
     fn issue_task_id(cfg: &MyConfig) -> Result<u32, SigoError> {
@@ -230,5 +258,4 @@ impl CompletedTask {
     const FILE_NAME: &'static str = "completed_tasks";
     create_read_tasks_function!();
     create_write_tasks_function!();
-    create_get_by_id_function!();
 }
