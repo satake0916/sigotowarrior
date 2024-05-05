@@ -13,27 +13,17 @@ mod utils;
 #[derive(Parser)]
 struct AppArg {
     #[clap(subcommand)]
-    command: Option<Command>,
+    command: Command,
 }
 
 #[derive(Subcommand)]
 enum Command {
-    Fue { description: String },
     Add { description: String },
-
-    Yari { id: u32 },
     Done { id: u32 },
-
-    Machi { id: u32 },
     Wait { id: u32 },
-
-    Modo { id: u32 },
     Back { id: u32 },
-
-    Hosoku { id: u32, annotation: String },
     Annotate { id: u32, annotation: String },
-
-    Taiki,
+    List,
     Waiting,
 }
 
@@ -52,110 +42,107 @@ fn main() {
 
     // Parse args
     let cli = AppArg::parse();
-    if let Some(command) = cli.command {
-        match command {
-            Command::Fue { description } | Command::Add { description } => {
-                let new_task = match ReadyTask::new(&cfg, &description) {
-                    Ok(task) => task,
-                    Err(err) => {
-                        println!("{}", err);
-                        return;
-                    }
-                };
-                match ReadyTask::add_task(&cfg, new_task) {
-                    Ok(task) => println!("Created sigo {}", task.id),
-                    Err(err) => println!("{}", err),
+    match cli.command {
+        Command::Add { description } => {
+            let new_task = match ReadyTask::new(&cfg, &description) {
+                Ok(task) => task,
+                Err(err) => {
+                    eprintln!("{}", err);
+                    return;
                 }
-            }
-            Command::Yari { id } | Command::Done { id } => {
-                let task = match Task::get_by_id(&cfg, id) {
-                    Ok(task) => task,
-                    Err(err) => {
-                        println!("{}", err);
-                        return;
-                    }
-                };
-                match task.complete(&cfg) {
-                    Ok(task) => println!("Completed sigo '{}'", task.description),
-                    Err(err) => println!("{}", err),
-                }
-            }
-            Command::Machi { id } | Command::Wait { id } => {
-                let task = match Task::get_by_id(&cfg, id) {
-                    Ok(task) => task,
-                    Err(err) => {
-                        println!("{}", err);
-                        return;
-                    }
-                };
-                match task {
-                    Task::Ready(task) => match task.wait(&cfg) {
-                        Ok(task) => {
-                            println!("Waiting sigo {} '{}'", task.id, task.get_main_description())
-                        }
-                        Err(err) => println!("{}", err),
-                    },
-                    Task::Waiting(task) => {
-                        println!("Already waiting task {}", task.id)
-                    }
-                    Task::Completed(_task) => {
-                        panic!("get_by_id function doesnot return completed task {}", id);
-                    }
-                }
-            }
-            Command::Modo { id } | Command::Back { id } => {
-                let task = match Task::get_by_id(&cfg, id) {
-                    Ok(task) => task,
-                    Err(err) => {
-                        println!("{}", err);
-                        return;
-                    }
-                };
-                match task {
-                    Task::Ready(task) => {
-                        println!("Already ready sigo {}", task.id);
-                    }
-                    Task::Waiting(task) => match task.back(&cfg) {
-                        Ok(task) => println!(
-                            "Returning sigo {} '{}'",
-                            task.id,
-                            task.get_main_description()
-                        ),
-                        Err(err) => println!("{}", err),
-                    },
-                    Task::Completed(_task) => {
-                        panic!("get_by_id function doesnot return completed task {}", id);
-                    }
-                }
-            }
-            Command::Hosoku { id, annotation } | Command::Annotate { id, annotation } => {
-                let task = match Task::get_by_id(&cfg, id) {
-                    Ok(task) => task,
-                    Err(err) => {
-                        println!("{}", err);
-                        return;
-                    }
-                };
-                match task.annotate(&cfg, &annotation) {
-                    Ok(()) => println!("Annotated sigo {} with '{}'", id, annotation),
-                    Err(err) => println!("{}", err),
-                }
-            }
-            Command::Taiki | Command::Waiting => {
-                let tasks = match WaitingTask::read_tasks(&cfg) {
-                    Ok(tasks) => tasks,
-                    Err(err) => {
-                        println!("{}", err);
-                        return;
-                    }
-                };
-                println!("{}", tasks_to_string(tasks));
+            };
+            match ReadyTask::add_task(&cfg, new_task) {
+                Ok(task) => println!("Created sigo {}", task.id),
+                Err(err) => eprintln!("{}", err),
             }
         }
-    } else {
-        match ReadyTask::read_tasks(&cfg) {
+        Command::Done { id } => {
+            let task = match Task::get_by_id(&cfg, id) {
+                Ok(task) => task,
+                Err(err) => {
+                    eprintln!("{}", err);
+                    return;
+                }
+            };
+            match task.complete(&cfg) {
+                Ok(task) => println!("Completed sigo '{}'", task.description),
+                Err(err) => eprintln!("{}", err),
+            }
+        }
+        Command::Wait { id } => {
+            let task = match Task::get_by_id(&cfg, id) {
+                Ok(task) => task,
+                Err(err) => {
+                    eprintln!("{}", err);
+                    return;
+                }
+            };
+            match task {
+                Task::Ready(task) => match task.wait(&cfg) {
+                    Ok(task) => {
+                        println!("Waiting sigo {} '{}'", task.id, task.get_main_description())
+                    }
+                    Err(err) => eprintln!("{}", err),
+                },
+                Task::Waiting(task) => {
+                    println!("Already waiting task {}", task.id)
+                }
+                Task::Completed(_task) => {
+                    panic!("get_by_id function doesnot return completed task {}", id);
+                }
+            }
+        }
+        Command::Back { id } => {
+            let task = match Task::get_by_id(&cfg, id) {
+                Ok(task) => task,
+                Err(err) => {
+                    eprintln!("{}", err);
+                    return;
+                }
+            };
+            match task {
+                Task::Ready(task) => {
+                    println!("Already ready sigo {}", task.id);
+                }
+                Task::Waiting(task) => match task.back(&cfg) {
+                    Ok(task) => println!(
+                        "Returning sigo {} '{}'",
+                        task.id,
+                        task.get_main_description()
+                    ),
+                    Err(err) => eprintln!("{}", err),
+                },
+                Task::Completed(_task) => {
+                    panic!("get_by_id function doesnot return completed task {}", id);
+                }
+            }
+        }
+        Command::Annotate { id, annotation } => {
+            let task = match Task::get_by_id(&cfg, id) {
+                Ok(task) => task,
+                Err(err) => {
+                    eprintln!("{}", err);
+                    return;
+                }
+            };
+            match task.annotate(&cfg, &annotation) {
+                Ok(()) => println!("Annotated sigo {} with '{}'", id, annotation),
+                Err(err) => eprintln!("{}", err),
+            }
+        }
+        Command::List => match ReadyTask::read_tasks(&cfg) {
             Ok(tasks) => println!("{}", tasks_to_string(tasks)),
-            Err(err) => println!("{}", err),
+            Err(err) => eprintln!("{}", err),
+        },
+        Command::Waiting => {
+            let tasks = match WaitingTask::read_tasks(&cfg) {
+                Ok(tasks) => tasks,
+                Err(err) => {
+                    eprintln!("{}", err);
+                    return;
+                }
+            };
+            println!("{}", tasks_to_string(tasks));
         }
     }
 }
