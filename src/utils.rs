@@ -1,4 +1,9 @@
-use std::collections::HashMap;
+use std::{
+    collections::HashMap,
+    fs,
+    io::{self, Write},
+    path::PathBuf,
+};
 
 use tabled::{
     grid::config::HorizontalLine,
@@ -21,4 +26,12 @@ where
         .modify(Rows::new(..), Padding::new(0, 0, 0, 0))
         .with(style)
         .to_string()
+}
+
+pub fn create_file_if_not_exist(path: &PathBuf) -> io::Result<()> {
+    if !path.is_file() {
+        let mut f = fs::File::create(path)?;
+        f.write_all(b"[]")?;
+    }
+    Ok(())
 }

@@ -1,13 +1,13 @@
-use std::path::PathBuf;
+use std::{fs, path::PathBuf};
 
 use clap::{Parser, Subcommand};
 use config::MyConfig;
 use task::{ReadyTask, Task, WaitingTask};
 
-use crate::print::tasks_to_string;
+use crate::utils::tasks_to_string;
 mod config;
-mod print;
 mod task;
+mod utils;
 
 #[derive(Parser)]
 struct AppArg {
@@ -34,13 +34,17 @@ enum Command {
 }
 
 fn main() {
-    // load settings
+    // load .sigorc
     let home = std::env::var("HOME").unwrap();
     let mut home = PathBuf::from(&home);
     home.push(".sigorc");
     let cfg = confy::load_path::<MyConfig>(&home).unwrap();
 
-    // if task dir doesnot exist, create dir and files
+    // if task dir doesnot exist, create dir
+    let sigo_path = PathBuf::from(&cfg.home);
+    if !sigo_path.is_dir() {
+        let _ = fs::create_dir(sigo_path);
+    }
 
     // Parse args
     let cli = AppArg::parse();
@@ -69,7 +73,7 @@ fn main() {
                     }
                 }
             }
-            Command::Modo { id } | Command::Return { id }  => {
+            Command::Modo { id } | Command::Return { id } => {
                 let task = Task::get_by_id(&cfg, id).unwrap();
                 match task {
                     Task::Waiting(task) => {

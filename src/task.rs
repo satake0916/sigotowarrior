@@ -4,6 +4,7 @@ use serde::{Deserialize, Serialize};
 use tabled::Tabled;
 
 use crate::config::MyConfig;
+use crate::utils;
 
 #[derive(Tabled, Serialize, Deserialize, Debug)]
 pub enum Task {
@@ -35,6 +36,7 @@ macro_rules! create_read_tasks_function {
         pub fn read_tasks(cfg: &MyConfig) -> Result<Vec<Self>, std::io::Error> {
             let mut path = PathBuf::from(&cfg.home);
             path.push(Self::FILE_NAME);
+            let _ = utils::create_file_if_not_exist(&path);
             match std::fs::read_to_string(path) {
                 Err(err) => Err(err),
                 Ok(tasks) => Ok(serde_json::from_str::<Vec<Self>>(&tasks).unwrap()),
@@ -48,6 +50,7 @@ macro_rules! create_write_tasks_function {
         pub fn write_tasks(cfg: &MyConfig, tasks: Vec<Self>) {
             let mut path = PathBuf::from(&cfg.home);
             path.push(Self::FILE_NAME);
+            let _ = utils::create_file_if_not_exist(&path);
             let tmp_path = path.with_extension(format!("sigo-tmp-{}", std::process::id()));
             let mut file = std::fs::File::create(&tmp_path).unwrap();
             let content = serde_json::to_string(&tasks).unwrap();
@@ -97,7 +100,7 @@ impl Task {
         match self {
             Task::Ready(task) => task.id,
             Task::Waiting(task) => task.id,
-            Task::Completed(task) => task.id
+            Task::Completed(task) => task.id,
         }
     }
 
@@ -105,25 +108,19 @@ impl Task {
         match self {
             Task::Ready(task) => task.description.to_owned(),
             Task::Waiting(task) => task.description.to_owned(),
-            Task::Completed(task) => task.description.to_owned()
+            Task::Completed(task) => task.description.to_owned(),
         }
     }
     pub fn get_by_id(cfg: &MyConfig, id: u32) -> Option<Task> {
-        let task = ReadyTask::get_by_id(cfg, id);
-        if task.is_some() {
-            return Some(Task::Ready(task.unwrap()));
+        if let Some(task) = ReadyTask::get_by_id(cfg, id) {
+            return Some(Task::Ready(task));
         }
-
-        let task = WaitingTask::get_by_id(cfg, id);
-        if task.is_some() {
-            return Some(Task::Waiting(task.unwrap()));
+        if let Some(task) = WaitingTask::get_by_id(cfg, id) {
+            return Some(Task::Waiting(task));
         }
-
-        let task = CompletedTask::get_by_id(cfg, id);
-        if task.is_some() {
-            return Some(Task::Completed(task.unwrap()));
+        if let Some(task) = CompletedTask::get_by_id(cfg, id) {
+            return Some(Task::Completed(task));
         }
-
         None
     }
 
@@ -193,7 +190,7 @@ impl ReadyTask {
     pub fn new(cfg: &MyConfig, description: &str) -> Self {
         let id = Task::issue_task_id(cfg);
         Self {
-            id: id,
+            id,
             description: description.to_owned(),
         }
     }
