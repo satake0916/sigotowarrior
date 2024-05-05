@@ -1,8 +1,19 @@
 [package]
-name = "chore"
-version = "0.1.0"
+name = "sigo"
+version = "0.0.2"
+authors = ["satake_makoto <satake.software@gmail.com"]
 edition = "2021"
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+description = "work-oriented command-line task management utility"
+license = "MIT"
+categories = ["command-line-utilities"]
 
 [dependencies]
+chrono = "0.4.38"
+clap = { version = "4.5.4", features = ["derive"] }
+confy = "0.6.1"
+serde = { version = "1.0.116", features = ["derive"] }
+serde_json = "1.0.116"
+tabled = "0.15.0"
+xdg = "2.5.2"
+strum = { version = "0.26", features = ["derive"] }
+strum_macros = "0.26"
