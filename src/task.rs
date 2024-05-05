@@ -5,7 +5,7 @@ use tabled::Tabled;
 
 use crate::config::MyConfig;
 use crate::error::SigoError;
-use crate::utils;
+use crate::{utils, Priority};
 
 #[derive(Tabled, Serialize, Deserialize, Debug)]
 pub enum Task {
@@ -17,6 +17,8 @@ pub enum Task {
 #[derive(Tabled, Serialize, Deserialize, Debug, Clone)]
 pub struct ReadyTask {
     pub id: u32,
+    #[tabled(rename = "P")]
+    pub priority: Priority,
     #[tabled(display_with = "utils::display_option_vec_string")]
     pub description: Option<Vec<String>>,
 }
@@ -24,6 +26,8 @@ pub struct ReadyTask {
 #[derive(Tabled, Serialize, Deserialize, Debug, Clone)]
 pub struct WaitingTask {
     pub id: u32,
+    #[tabled(rename = "P")]
+    pub priority: Priority,
     #[tabled(display_with = "utils::display_option_vec_string")]
     pub description: Option<Vec<String>>,
 }
@@ -193,6 +197,7 @@ impl Task {
                 let annotated_task = ReadyTask {
                     id: task.id,
                     description: Some(description),
+                    priority: task.priority,
                 };
                 after_tasks.push(annotated_task);
                 ReadyTask::write_tasks(cfg, after_tasks)?;
@@ -212,6 +217,7 @@ impl Task {
                 let annotated_task = WaitingTask {
                     id: task.id,
                     description: Some(description),
+                    priority: task.priority,
                 };
                 after_tasks.push(annotated_task);
                 WaitingTask::write_tasks(cfg, after_tasks)?;
@@ -247,11 +253,12 @@ impl ReadyTask {
     create_delete_by_id_function!();
     create_get_main_description_function!();
 
-    pub fn new(cfg: &MyConfig, description: &str) -> Result<Self, SigoError> {
+    pub fn new(cfg: &MyConfig, description: &str, priority: Priority) -> Result<Self, SigoError> {
         let id = Task::issue_task_id(cfg)?;
         Ok(Self {
             id,
             description: Some(vec![description.to_owned()]),
+            priority,
         })
     }
 
@@ -259,6 +266,7 @@ impl ReadyTask {
         ReadyTask {
             id: waiting_task.id,
             description: Some(waiting_task.description.unwrap_or_default()),
+            priority: waiting_task.priority,
         }
     }
 
@@ -281,6 +289,7 @@ impl WaitingTask {
         Self {
             id: ready_task.id,
             description: Some(ready_task.description.unwrap_or_default()),
+            priority: ready_task.priority,
         }
     }
 

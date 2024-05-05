@@ -1,7 +1,9 @@
 use std::{fs, path::PathBuf};
 
-use clap::{Parser, Subcommand};
+use clap::{Parser, Subcommand, ValueEnum};
 use config::MyConfig;
+use serde::{Deserialize, Serialize};
+use strum::Display;
 use task::{ReadyTask, Task, WaitingTask};
 
 use crate::utils::tasks_to_string;
@@ -19,7 +21,13 @@ struct AppArg {
 #[derive(Subcommand)]
 enum Command {
     /// Add sigo
-    Add { description: String },
+    Add {
+        description: String,
+
+        /// Priority(H/M/L)
+        #[arg(value_enum, short, long, default_value_t = Priority::M)]
+        priority: Priority,
+    },
 
     /// Done sigo
     Done { id: u32 },
@@ -46,6 +54,15 @@ enum Command {
     Waiting,
 }
 
+#[derive(
+    Copy, Clone, PartialEq, Eq, PartialOrd, Ord, ValueEnum, Debug, Display, Serialize, Deserialize,
+)]
+enum Priority {
+    H,
+    M,
+    L,
+}
+
 fn main() {
     // load config.ini
     let xdg_dirs = xdg::BaseDirectories::with_prefix("sigotorrior").expect("XDG is not used");
@@ -61,8 +78,11 @@ fn main() {
     // Parse args
     let cli = AppArg::parse();
     match cli.command {
-        Command::Add { description } => {
-            let new_task = match ReadyTask::new(&cfg, &description) {
+        Command::Add {
+            description,
+            priority,
+        } => {
+            let new_task = match ReadyTask::new(&cfg, &description, priority) {
                 Ok(task) => task,
                 Err(err) => {
                     eprintln!("{}", err);
@@ -149,18 +169,24 @@ fn main() {
             }
         }
         Command::List => match ReadyTask::read_tasks(&cfg) {
-            Ok(tasks) => println!("{}", tasks_to_string(tasks)),
-            Err(err) => eprintln!("{}", err),
+            Ok(mut tasks) => {
+                tasks.sort_by(|a, b| a.priority.cmp(&b.priority));
+                println!("{}", tasks_to_string(tasks));
+            }
+            Err(err) => {
+                eprintln!("{}", err);
+            }
         },
         Command::Waiting => {
-            let tasks = match WaitingTask::read_tasks(&cfg) {
-                Ok(tasks) => tasks,
+            match WaitingTask::read_tasks(&cfg) {
+                Ok(mut tasks) => {
+                    tasks.sort_by(|a, b| a.priority.cmp(&b.priority));
+                    println!("{}", tasks_to_string(tasks));
+                }
                 Err(err) => {
                     eprintln!("{}", err);
-                    return;
                 }
             };
-            println!("{}", tasks_to_string(tasks));
         }
     }
 }
