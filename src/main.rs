@@ -18,24 +18,42 @@ struct AppArg {
 
 #[derive(Subcommand)]
 enum Command {
+    /// Add sigo
     Add { description: String },
+
+    /// Done sigo
     Done { id: u32 },
+
+    /// Change sigo waiting
     Wait { id: u32 },
+
+    /// Change sigo ready
     Back { id: u32 },
-    Annotate { id: u32, annotation: String },
+
+    /// Annotate existing sigo
+    Annotate {
+        id: u32,
+
+        /// Annotation text
+        #[arg(short, long)]
+        text: String,
+    },
+
+    /// List ready sigos
     List,
+
+    /// List waiting sigos
     Waiting,
 }
 
 fn main() {
-    // load .sigorc
-    let home = std::env::var("HOME").expect("HOME is not set");
-    let mut home = PathBuf::from(&home);
-    home.push(".sigorc");
-    let cfg = confy::load_path::<MyConfig>(&home).expect("cannot load .sigorc");
+    // load config.ini
+    let xdg_dirs = xdg::BaseDirectories::with_prefix("sigotorrior").expect("XDG is not used");
+    let config_path = xdg_dirs.get_config_file("config.ini");
+    let cfg = confy::load_path::<MyConfig>(&config_path).expect("cannot load config.ini");
 
     // if task dir doesnot exist, create dir
-    let sigo_path = PathBuf::from(&cfg.home);
+    let sigo_path = PathBuf::from(&cfg.data);
     if !sigo_path.is_dir() {
         let _ = fs::create_dir(sigo_path);
     }
@@ -117,7 +135,7 @@ fn main() {
                 }
             }
         }
-        Command::Annotate { id, annotation } => {
+        Command::Annotate { id, text } => {
             let task = match Task::get_by_id(&cfg, id) {
                 Ok(task) => task,
                 Err(err) => {
@@ -125,8 +143,8 @@ fn main() {
                     return;
                 }
             };
-            match task.annotate(&cfg, &annotation) {
-                Ok(()) => println!("Annotated sigo {} with '{}'", id, annotation),
+            match task.annotate(&cfg, &text) {
+                Ok(()) => println!("Annotated sigo {} with '{}'", id, text),
                 Err(err) => eprintln!("{}", err),
             }
         }

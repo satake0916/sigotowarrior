@@ -458,6 +458,7 @@ dependencies = [
  "serde",
  "serde_json",
  "tabled",
+ "xdg",
 ]
 
 [[package]]
@@ -806,3 +807,9 @@ checksum = "14b9415ee827af173ebb3f15f9083df5a122eb93572ec28741fb153356ea2578"
 dependencies = [
  "memchr",
 ]
+
+[[package]]
+name = "xdg"
+version = "2.5.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "213b7324336b53d2414b2db8537e56544d981803139155afa84f76eeebb7a546"

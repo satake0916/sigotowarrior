@@ -36,7 +36,7 @@ pub struct CompletedTask {
 macro_rules! create_read_tasks_function {
     () => {
         pub fn read_tasks(cfg: &MyConfig) -> Result<Vec<Self>, SigoError> {
-            let mut path = PathBuf::from(&cfg.home);
+            let mut path = PathBuf::from(&cfg.data);
             path.push(Self::FILE_NAME);
             utils::create_file_if_not_exist(&path)?;
             let tasks = std::fs::read_to_string(path.clone())
@@ -51,7 +51,7 @@ macro_rules! create_read_tasks_function {
 macro_rules! create_write_tasks_function {
     () => {
         pub fn write_tasks(cfg: &MyConfig, tasks: Vec<Self>) -> Result<(), SigoError> {
-            let mut path = PathBuf::from(&cfg.home);
+            let mut path = PathBuf::from(&cfg.data);
             path.push(Self::FILE_NAME);
             utils::create_file_if_not_exist(&path)?;
             let tmp_path = path.with_extension(format!("sigo-tmp-{}", std::process::id()));

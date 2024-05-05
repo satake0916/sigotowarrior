@@ -1,22 +1,19 @@
-use std::path::PathBuf;
-
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize)]
 pub struct MyConfig {
-    pub home: String,
+    pub data: String,
 }
 
 impl ::std::default::Default for MyConfig {
     fn default() -> Self {
-        let home = std::env::var("HOME").expect("HOME is not set");
-        let mut home = PathBuf::from(&home);
-        home.push(".sigo");
+        let xdg_dirs = xdg::BaseDirectories::with_prefix("sigotorrior").expect("XDG is not used");
+        let data_dir = xdg_dirs.get_data_home();
         Self {
-            home: home
+            data: data_dir
                 .into_os_string()
                 .into_string()
-                .expect("HOME is not UTF-8"),
+                .expect("XDG_DATA_HOME is not set"),
         }
     }
 }
