@@ -126,6 +126,14 @@ macro_rules! create_get_main_description_function {
 }
 
 impl Task {
+    pub fn id(&self) -> Option<u32> {
+        match self {
+            Task::Ready(task) => Some(task.id),
+            Task::Waiting(task) => Some(task.id),
+            Task::Completed(_) => None,
+        }
+    }
+
     pub fn get_by_id(cfg: &MyConfig, id: u32) -> Result<Task, SigoError> {
         if let Ok(task) = ReadyTask::get_by_id(cfg, id) {
             return Ok(Task::Ready(task));
@@ -227,6 +235,71 @@ impl Task {
             }
         };
         Ok(())
+    }
+
+    pub fn modify(
+        &self,
+        cfg: &MyConfig,
+        text: &Option<String>,
+        priority: Option<Priority>,
+    ) -> Result<Task, SigoError> {
+        let new_task = match &self {
+            Task::Ready(task) => {
+                let id = task.id;
+                let before_tasks = ReadyTask::read_tasks(cfg)?;
+                let mut after_tasks = before_tasks
+                    .into_iter()
+                    .filter(|t| t.id != id)
+                    .collect::<Vec<ReadyTask>>();
+                let mut description =
+                    <std::option::Option<Vec<std::string::String>> as Clone>::clone(
+                        &task.description,
+                    )
+                    .unwrap_or_default();
+                if let Some(text) = text {
+                    if let Some(first_description) = description.get_mut(0) {
+                        *first_description = text.to_string()
+                    }
+                }
+                let new_task = ReadyTask {
+                    id: task.id,
+                    description: Some(description),
+                    priority: priority.unwrap_or(task.priority),
+                };
+                after_tasks.push(new_task.clone());
+                ReadyTask::write_tasks(cfg, after_tasks)?;
+                Task::Ready(new_task)
+            }
+            Task::Waiting(task) => {
+                let before_tasks = WaitingTask::read_tasks(cfg)?;
+                let mut after_tasks = before_tasks
+                    .into_iter()
+                    .filter(|t| t.id != task.id)
+                    .collect::<Vec<WaitingTask>>();
+                let mut description =
+                    <std::option::Option<Vec<std::string::String>> as Clone>::clone(
+                        &task.description,
+                    )
+                    .unwrap_or_default();
+                if let Some(text) = text {
+                    if let Some(first_description) = description.get_mut(0) {
+                        *first_description = text.to_string()
+                    }
+                }
+                let new_task = WaitingTask {
+                    id: task.id,
+                    description: Some(description),
+                    priority: priority.unwrap_or(task.priority),
+                };
+                after_tasks.push(new_task.clone());
+                WaitingTask::write_tasks(cfg, after_tasks)?;
+                Task::Waiting(new_task)
+            }
+            Task::Completed(_) => {
+                panic!("cannot modify completed task");
+            }
+        };
+        Ok(new_task)
     }
 
     fn issue_task_id(cfg: &MyConfig) -> Result<u32, SigoError> {

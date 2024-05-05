@@ -29,6 +29,19 @@ enum Command {
         priority: Priority,
     },
 
+    /// Modify sigo
+    Modify {
+        id: u32,
+
+        /// Description text
+        #[arg(short, long)]
+        text: Option<String>,
+
+        /// Priority(H/M/L)
+        #[arg(value_enum, short, long)]
+        priority: Option<Priority>,
+    },
+
     /// Done sigo
     Done { id: u32 },
 
@@ -91,6 +104,23 @@ fn main() {
             };
             match ReadyTask::add_task(&cfg, new_task) {
                 Ok(task) => println!("Created sigo {}", task.id),
+                Err(err) => eprintln!("{}", err),
+            }
+        }
+        Command::Modify { id, text, priority } => {
+            let task = match Task::get_by_id(&cfg, id) {
+                Ok(task) => task,
+                Err(err) => {
+                    eprintln!("{}", err);
+                    return;
+                }
+            };
+            match task.modify(&cfg, &text, priority) {
+                Ok(task) => println!(
+                    "Modify sigo '{}'",
+                    task.id()
+                        .expect("modify func must return ready or waiting task")
+                ),
                 Err(err) => eprintln!("{}", err),
             }
         }
