@@ -1,32 +1,33 @@
 use std::{collections::HashSet, io::Write, path::PathBuf};
 
 use serde::{Deserialize, Serialize};
+use tabled::Tabled;
 
 use crate::config::MyConfig;
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Tabled, Serialize, Deserialize, Debug)]
 pub enum Task {
     Ready(ReadyTask),
     Waiting(WaitingTask),
     Completed(CompletedTask),
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Tabled, Serialize, Deserialize, Debug)]
 pub struct ReadyTask {
     pub id: u32,
-    description: String,
+    pub description: String,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Tabled, Serialize, Deserialize, Debug)]
 pub struct WaitingTask {
-    id: u32,
-    description: String,
+    pub id: u32,
+    pub description: String,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Tabled, Serialize, Deserialize, Debug, Clone)]
 pub struct CompletedTask {
-    id: u32,
-    description: String,
+    pub id: u32,
+    pub description: String,
 }
 
 macro_rules! create_read_tasks_function {
@@ -92,6 +93,21 @@ macro_rules! create_delete_by_id_function {
 }
 
 impl Task {
+    pub fn id(&self) -> u32 {
+        match self {
+            Task::Ready(task) => task.id,
+            Task::Waiting(task) => task.id,
+            Task::Completed(task) => task.id
+        }
+    }
+
+    pub fn description(&self) -> String {
+        match self {
+            Task::Ready(task) => task.description.to_owned(),
+            Task::Waiting(task) => task.description.to_owned(),
+            Task::Completed(task) => task.description.to_owned()
+        }
+    }
     pub fn get_by_id(cfg: &MyConfig, id: u32) -> Option<Task> {
         let task = ReadyTask::get_by_id(cfg, id);
         if task.is_some() {
@@ -209,7 +225,7 @@ impl WaitingTask {
         }
     }
 
-    pub fn get_ball(&self, cfg: &MyConfig) {
+    pub fn back(&self, cfg: &MyConfig) {
         WaitingTask::delete_by_id(cfg, self.id);
         ReadyTask::add_task(cfg, ReadyTask::from_waiting(self));
     }

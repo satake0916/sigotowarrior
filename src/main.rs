@@ -3,7 +3,10 @@ use std::path::PathBuf;
 use clap::{Parser, Subcommand};
 use config::MyConfig;
 use task::{ReadyTask, Task, WaitingTask};
+
+use crate::print::tasks_to_string;
 mod config;
+mod print;
 mod task;
 
 #[derive(Parser)]
@@ -15,10 +18,19 @@ struct AppArg {
 #[derive(Subcommand)]
 enum Command {
     Fue { description: String },
+    Add { description: String },
+
     Yari { id: u32 },
+    Done { id: u32 },
+
     Machi { id: u32 },
+    Wait { id: u32 },
+
     Modo { id: u32 },
+    Return { id: u32 },
+
     Taiki,
+    Waiting,
 }
 
 fn main() {
@@ -28,51 +40,54 @@ fn main() {
     home.push(".sigorc");
     let cfg = confy::load_path::<MyConfig>(&home).unwrap();
 
+    // if task dir doesnot exist, create dir and files
+
     // Parse args
     let cli = AppArg::parse();
     if let Some(command) = cli.command {
         match command {
-            Command::Fue { description } => {
+            Command::Fue { description } | Command::Add { description } => {
                 let new_task = ReadyTask::new(&cfg, &description);
+                let id = new_task.id;
                 ReadyTask::add_task(&cfg, new_task);
-                println!("Add {}", description);
+                println!("Created sigo {}", id);
             }
-            Command::Yari { id } => {
+            Command::Yari { id } | Command::Done { id } => {
                 let task = Task::get_by_id(&cfg, id).unwrap();
                 task.complete(&cfg);
-                println!("Done {:?}", task);
+                println!("Completed sigo {} '{}'", task.id(), task.description());
             }
-            Command::Machi { id } => {
+            Command::Machi { id } | Command::Wait { id } => {
                 let task = Task::get_by_id(&cfg, id).unwrap();
                 match task {
                     Task::Ready(task) => {
                         task.wait(&cfg);
-                        println!("Wait {:?}", task)
+                        println!("Waiting sigo {} '{}'", task.id, task.description)
                     }
                     _ => {
                         // Exception
                     }
                 }
             }
-            Command::Modo { id } => {
+            Command::Modo { id } | Command::Return { id }  => {
                 let task = Task::get_by_id(&cfg, id).unwrap();
                 match task {
                     Task::Waiting(task) => {
-                        task.get_ball(&cfg);
-                        println!("Myball {:?}", task)
+                        task.back(&cfg);
+                        println!("Returning sigo {} '{}'", task.id, task.description)
                     }
                     _ => {
                         // Exception
                     }
                 }
             }
-            Command::Taiki => {
-                let tasks = WaitingTask::read_tasks(&cfg);
-                tasks.iter().for_each(|t| println!("{:?}", t));
+            Command::Taiki | Command::Waiting => {
+                let tasks = WaitingTask::read_tasks(&cfg).unwrap();
+                println!("{}", tasks_to_string(tasks));
             }
         }
     } else {
-        let tasks = ReadyTask::read_tasks(&cfg);
-        tasks.iter().for_each(|t| println!("{:?}", t));
+        let tasks = ReadyTask::read_tasks(&cfg).unwrap();
+        println!("{}", tasks_to_string(tasks));
     }
 }
