@@ -1,15 +1,12 @@
-use std::{
-    collections::HashMap,
-    fs,
-    io::{self, Write},
-    path::PathBuf,
-};
+use std::{collections::HashMap, fs, io::Write, path::PathBuf};
 
 use tabled::{
     grid::config::HorizontalLine,
     settings::{object::Rows, Padding, Theme},
     Table, Tabled,
 };
+
+use crate::error::SigoError;
 
 pub fn tasks_to_string<I, T>(tasks: I) -> String
 where
@@ -28,10 +25,12 @@ where
         .to_string()
 }
 
-pub fn create_file_if_not_exist(path: &PathBuf) -> io::Result<()> {
+pub fn create_file_if_not_exist(path: &PathBuf) -> Result<(), SigoError> {
     if !path.is_file() {
-        let mut f = fs::File::create(path)?;
-        f.write_all(b"[]")?;
+        let mut f =
+            fs::File::create(path).map_err(|e| SigoError::FileCreateErr(path.to_path_buf(), e))?;
+        f.write_all(b"[]")
+            .map_err(|e| SigoError::FileWriteErr(path.to_path_buf(), e))?;
     }
     Ok(())
 }

@@ -9,7 +9,7 @@ pub struct MyConfig {
 
 impl ::std::default::Default for MyConfig {
     fn default() -> Self {
-        let home = std::env::var("HOME").unwrap();
+        let home = std::env::var("HOME").expect("HOME is not set");
         let mut home = PathBuf::from(&home);
         home.push(".sigo");
         Self {
