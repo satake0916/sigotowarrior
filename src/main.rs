@@ -62,9 +62,8 @@ fn main() {
                         return;
                     }
                 };
-                let id = new_task.id;
                 match ReadyTask::add_task(&cfg, new_task) {
-                    Ok(()) => println!("Created sigo {}", id),
+                    Ok(task) => println!("Created sigo {}", task.id),
                     Err(err) => println!("{}", err),
                 }
             }
@@ -77,7 +76,7 @@ fn main() {
                     }
                 };
                 match task.complete(&cfg) {
-                    Ok(task) => println!("Completed sigo {} '{}'", task.id, task.description),
+                    Ok(task) => println!("Completed sigo '{}'", task.description),
                     Err(err) => println!("{}", err),
                 }
             }
@@ -91,17 +90,16 @@ fn main() {
                 };
                 match task {
                     Task::Ready(task) => match task.wait(&cfg) {
-                        Ok(()) => println!("Waiting sigo {} '{}'", task.id, task.description),
+                        Ok(task) => {
+                            println!("Waiting sigo {} '{}'", task.id, task.get_main_description())
+                        }
                         Err(err) => println!("{}", err),
                     },
                     Task::Waiting(task) => {
                         println!("Already waiting task {}", task.id)
                     }
-                    Task::Completed(task) => {
-                        panic!(
-                            "get_by_id function doesnot return completed task {}",
-                            task.id
-                        );
+                    Task::Completed(_task) => {
+                        panic!("get_by_id function doesnot return completed task {}", id);
                     }
                 }
             }
@@ -118,14 +116,15 @@ fn main() {
                         println!("Already ready sigo {}", task.id);
                     }
                     Task::Waiting(task) => match task.back(&cfg) {
-                        Ok(()) => println!("Returning sigo {} '{}'", task.id, task.description),
+                        Ok(task) => println!(
+                            "Returning sigo {} '{}'",
+                            task.id,
+                            task.get_main_description()
+                        ),
                         Err(err) => println!("{}", err),
                     },
-                    Task::Completed(task) => {
-                        panic!(
-                            "get_by_id function doesnot return completed task {}",
-                            task.id
-                        );
+                    Task::Completed(_task) => {
+                        panic!("get_by_id function doesnot return completed task {}", id);
                     }
                 }
             }

@@ -14,21 +14,22 @@ pub enum Task {
     Completed(CompletedTask),
 }
 
-#[derive(Tabled, Serialize, Deserialize, Debug)]
+#[derive(Tabled, Serialize, Deserialize, Debug, Clone)]
 pub struct ReadyTask {
     pub id: u32,
-    pub description: String,
+    #[tabled(display_with = "utils::display_option_vec_string")]
+    pub description: Option<Vec<String>>,
 }
 
-#[derive(Tabled, Serialize, Deserialize, Debug)]
+#[derive(Tabled, Serialize, Deserialize, Debug, Clone)]
 pub struct WaitingTask {
     pub id: u32,
-    pub description: String,
+    #[tabled(display_with = "utils::display_option_vec_string")]
+    pub description: Option<Vec<String>>,
 }
 
 #[derive(Tabled, Serialize, Deserialize, Debug, Clone)]
 pub struct CompletedTask {
-    pub id: u32,
     pub description: String,
 }
 
@@ -71,11 +72,11 @@ macro_rules! create_write_tasks_function {
 
 macro_rules! create_add_task_function {
     () => {
-        pub fn add_task(cfg: &MyConfig, task: Self) -> Result<(), SigoError> {
+        pub fn add_task(cfg: &MyConfig, task: Self) -> Result<Self, SigoError> {
             let mut tasks = Self::read_tasks(cfg)?;
-            tasks.push(task);
+            tasks.push(task.clone());
             Self::write_tasks(cfg, tasks)?;
-            Ok(())
+            Ok(task)
         }
     };
 }
@@ -106,6 +107,20 @@ macro_rules! create_delete_by_id_function {
     };
 }
 
+macro_rules! create_get_main_description_function {
+    () => {
+        pub fn get_main_description(&self) -> String {
+            match &self.description {
+                Some(v) => v
+                    .get(0)
+                    .unwrap_or(&"No description".to_string())
+                    .to_string(),
+                None => "No description".to_string(),
+            }
+        }
+    };
+}
+
 impl Task {
     pub fn get_by_id(cfg: &MyConfig, id: u32) -> Result<Task, SigoError> {
         if let Ok(task) = ReadyTask::get_by_id(cfg, id) {
@@ -128,8 +143,11 @@ impl Task {
                     .collect::<Vec<ReadyTask>>();
                 ReadyTask::write_tasks(cfg, after_tasks)?;
                 CompletedTask {
-                    id: task.id,
-                    description: task.description.to_owned(),
+                    description: <std::option::Option<Vec<std::string::String>> as Clone>::clone(
+                        &task.description,
+                    )
+                    .unwrap_or_default()
+                    .concat(),
                 }
             }
             Task::Waiting(task) => {
@@ -140,8 +158,11 @@ impl Task {
                     .collect::<Vec<WaitingTask>>();
                 WaitingTask::write_tasks(cfg, after_tasks)?;
                 CompletedTask {
-                    id: task.id,
-                    description: task.description.to_owned(),
+                    description: <std::option::Option<Vec<std::string::String>> as Clone>::clone(
+                        &task.description,
+                    )
+                    .unwrap_or_default()
+                    .concat(),
                 }
             }
             Task::Completed(_) => {
@@ -157,14 +178,21 @@ impl Task {
     pub fn annotate(&self, cfg: &MyConfig, annotate: &str) -> Result<(), SigoError> {
         match &self {
             Task::Ready(task) => {
+                let id = task.id;
                 let before_tasks = ReadyTask::read_tasks(cfg)?;
                 let mut after_tasks = before_tasks
                     .into_iter()
-                    .filter(|t| t.id != task.id)
+                    .filter(|t| t.id != id)
                     .collect::<Vec<ReadyTask>>();
+                let mut description =
+                    <std::option::Option<Vec<std::string::String>> as Clone>::clone(
+                        &task.description,
+                    )
+                    .unwrap_or_default();
+                description.push(annotate.to_owned());
                 let annotated_task = ReadyTask {
                     id: task.id,
-                    description: format!("{}\n{}", task.description, annotate),
+                    description: Some(description),
                 };
                 after_tasks.push(annotated_task);
                 ReadyTask::write_tasks(cfg, after_tasks)?;
@@ -175,9 +203,15 @@ impl Task {
                     .into_iter()
                     .filter(|t| t.id != task.id)
                     .collect::<Vec<WaitingTask>>();
+                let mut description =
+                    <std::option::Option<Vec<std::string::String>> as Clone>::clone(
+                        &task.description,
+                    )
+                    .unwrap_or_default();
+                description.push(annotate.to_owned());
                 let annotated_task = WaitingTask {
                     id: task.id,
-                    description: format!("{}\n{}", task.description, annotate),
+                    description: Some(description),
                 };
                 after_tasks.push(annotated_task);
                 WaitingTask::write_tasks(cfg, after_tasks)?;
@@ -211,26 +245,27 @@ impl ReadyTask {
     create_add_task_function!();
     create_get_by_id_function!();
     create_delete_by_id_function!();
+    create_get_main_description_function!();
 
     pub fn new(cfg: &MyConfig, description: &str) -> Result<Self, SigoError> {
         let id = Task::issue_task_id(cfg)?;
         Ok(Self {
             id,
-            description: description.to_owned(),
+            description: Some(vec![description.to_owned()]),
         })
     }
 
-    fn from_waiting(waiting_task: &WaitingTask) -> Self {
+    fn from_waiting(waiting_task: WaitingTask) -> Self {
         ReadyTask {
             id: waiting_task.id,
-            description: waiting_task.description.to_owned(),
+            description: Some(waiting_task.description.unwrap_or_default()),
         }
     }
 
-    pub fn wait(&self, cfg: &MyConfig) -> Result<(), SigoError> {
+    pub fn wait(self, cfg: &MyConfig) -> Result<WaitingTask, SigoError> {
         ReadyTask::delete_by_id(cfg, self.id)?;
-        WaitingTask::add_task(cfg, WaitingTask::from_ready(self))?;
-        Ok(())
+        let task = WaitingTask::add_task(cfg, WaitingTask::from_ready(self))?;
+        Ok(task)
     }
 }
 impl WaitingTask {
@@ -240,18 +275,19 @@ impl WaitingTask {
     create_add_task_function!();
     create_get_by_id_function!();
     create_delete_by_id_function!();
+    create_get_main_description_function!();
 
-    fn from_ready(ready_task: &ReadyTask) -> Self {
+    fn from_ready(ready_task: ReadyTask) -> Self {
         Self {
             id: ready_task.id,
-            description: ready_task.description.to_owned(),
+            description: Some(ready_task.description.unwrap_or_default()),
         }
     }
 
-    pub fn back(&self, cfg: &MyConfig) -> Result<(), SigoError> {
+    pub fn back(self, cfg: &MyConfig) -> Result<ReadyTask, SigoError> {
         WaitingTask::delete_by_id(cfg, self.id)?;
-        ReadyTask::add_task(cfg, ReadyTask::from_waiting(self))?;
-        Ok(())
+        let task = ReadyTask::add_task(cfg, ReadyTask::from_waiting(self))?;
+        Ok(task)
     }
 }
 impl CompletedTask {

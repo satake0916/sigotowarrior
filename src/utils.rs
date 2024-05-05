@@ -34,3 +34,10 @@ pub fn create_file_if_not_exist(path: &PathBuf) -> Result<(), SigoError> {
     }
     Ok(())
 }
+
+pub fn display_option_vec_string(o: &Option<Vec<String>>) -> String {
+    match o {
+        Some(v) => v.join("\n* "),
+        None => "No description".to_owned(),
+    }
+}
