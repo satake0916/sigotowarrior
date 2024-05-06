@@ -1,9 +1,9 @@
 [package]
 name = "sigo"
-version = "0.0.2"
+version = "0.1.0"
 authors = ["satake_makoto <satake.software@gmail.com"]
 edition = "2021"
-description = "work-oriented command-line task management utility"
+description = "command-line task management utility for work"
 license = "MIT"
 categories = ["command-line-utilities"]
 
