@@ -6,6 +6,7 @@ edition = "2021"
 description = "command-line task management utility for work"
 license = "MIT"
 categories = ["command-line-utilities"]
+repository = "https://github.com/satake0916/sigotorrior"
 
 [dependencies]
 chrono = "0.4.38"
