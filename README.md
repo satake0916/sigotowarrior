@@ -1,14 +1,14 @@
-# Sigotorrior
+# Sigotowarrior
 
-sigotorrior is a command-line task management utility especially for work.
+Sigotowarrior is a command-line task management utility especially for work.
 
 ---
 
 ## A Quick Demonstration
 
-Let's see Sigotorrior in action.
+Let's see Sigotowarrior in action.
 
-ln Sigotorrior, tasks are reffered as 'sigo', and a sigo is classified into one of three states: ready, waiting, or completed.
+In Sigotowarrior, tasks are reffered as 'sigo', and a sigo is classified into one of three states: ready, waiting, or completed.
 A sigo is initially in the ready state.
 
 ```bash
@@ -98,4 +98,4 @@ satake_makoto
 
 ## License
 
-Sigowarrior is released under the MIT license.
+Sigotowarrior is released under the MIT license.
