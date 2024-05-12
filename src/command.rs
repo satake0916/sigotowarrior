@@ -44,11 +44,11 @@ pub fn run(cfg: &MyConfig, args: AppArg) -> Result<String> {
                 Task::Completed(_) => panic!(),
             }
         }
-        Command::Wait { id } => {
+        Command::Wait { id, text } => {
             let task = Task::get_by_id(cfg, id)?;
             match task {
                 Task::Ready(task) => {
-                    let task = task.wait(cfg)?;
+                    let task = task.wait(cfg, &text)?;
                     Ok(format!(
                         "Waiting sigo {} '{}'",
                         task.id,
@@ -59,7 +59,7 @@ pub fn run(cfg: &MyConfig, args: AppArg) -> Result<String> {
                 Task::Completed(_) => panic!(),
             }
         }
-        Command::Back { id } => {
+        Command::Back { id, text } => {
             let task = Task::get_by_id(cfg, id)?;
             match task {
                 Task::Ready(task) => Ok(format!(
@@ -68,7 +68,7 @@ pub fn run(cfg: &MyConfig, args: AppArg) -> Result<String> {
                     task.get_main_description()
                 )),
                 Task::Waiting(task) => {
-                    let task = task.back(cfg)?;
+                    let task = task.back(cfg, &text)?;
                     Ok(format!("Returning sigo {}", task.id))
                 }
                 Task::Completed(_) => panic!(),

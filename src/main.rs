@@ -45,10 +45,22 @@ enum Command {
     Done { id: u32 },
 
     /// Change sigo waiting
-    Wait { id: u32 },
+    Wait {
+        id: u32,
+
+        /// Description text
+        #[arg(short, long)]
+        text: Option<String>,
+    },
 
     /// Change sigo ready
-    Back { id: u32 },
+    Back {
+        id: u32,
+
+        /// Description text
+        #[arg(short, long)]
+        text: Option<String>,
+    },
 
     /// Annotate existing sigo
     Annotate {

@@ -85,9 +85,12 @@ impl ReadyTask {
         }
     }
 
-    pub fn wait(self, cfg: &MyConfig) -> Result<WaitingTask, SigoError> {
+    pub fn wait(self, cfg: &MyConfig, text: &Option<String>) -> Result<WaitingTask, SigoError> {
         ReadyTask::delete_by_id(cfg, self.id)?;
         let task = WaitingTask::add_task(cfg, WaitingTask::from_ready(self))?;
+        if let Some(text) = text {
+            task.annotate(cfg, text)?;
+        }
         Ok(task)
     }
 }
@@ -102,9 +105,12 @@ impl WaitingTask {
         }
     }
 
-    pub fn back(self, cfg: &MyConfig) -> Result<ReadyTask, SigoError> {
+    pub fn back(self, cfg: &MyConfig, text: &Option<String>) -> Result<ReadyTask, SigoError> {
         WaitingTask::delete_by_id(cfg, self.id)?;
         let task = ReadyTask::add_task(cfg, ReadyTask::from_waiting(self))?;
+        if let Some(text) = text {
+            task.annotate(cfg, text)?;
+        }
         Ok(task)
     }
 }
