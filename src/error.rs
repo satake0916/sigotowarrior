@@ -1,5 +1,7 @@
 use std::{error::Error, fmt, path::PathBuf};
 
+pub type Result<T> = std::result::Result<T, SigoError>;
+
 #[derive(Debug)]
 pub enum SigoError {
     FileCreateErr(PathBuf, std::io::Error),
@@ -10,16 +12,6 @@ pub enum SigoError {
     ParseTasksToStrErr(serde_json::Error),
     TaskNotFound(u32),
 }
-
-// impl fmt::Display for SigoError {
-//     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-//         match self {
-//             SigoError::FileCreateErr(_, ref err) => err.fmt(f),
-//             SigoError::FileReadErr(_, ref err) => err.fmt(f),
-//             SigoError::ParseJsonToTasksErr(ref err) => err.fmt(f),
-//         }
-//     }
-// }
 
 impl fmt::Display for SigoError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -41,8 +33,8 @@ impl fmt::Display for SigoError {
             SigoError::ParseStrToTasksErr(path, ref err) => {
                 writeln!(f, "unbale to parse file {:?}: {}", path, err)
             }
-            SigoError::ParseTasksToStrErr(err) => writeln!(f, "unbale to parse tasks: {}", err),
-            SigoError::TaskNotFound(id) => writeln!(f, "not found task {}", id),
+            SigoError::ParseTasksToStrErr(err) => writeln!(f, "unbale to parse sigo {}", err),
+            SigoError::TaskNotFound(id) => writeln!(f, "not found sigo {}", id),
         }
     }
 }

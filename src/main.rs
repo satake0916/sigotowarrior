@@ -4,9 +4,8 @@ use clap::{Parser, Subcommand, ValueEnum};
 use config::MyConfig;
 use serde::{Deserialize, Serialize};
 use strum::Display;
-use task::{ReadyTask, Task, WaitingTask};
 
-use crate::utils::tasks_to_string;
+mod command;
 mod config;
 mod error;
 mod task;
@@ -88,151 +87,10 @@ fn main() {
         let _ = fs::create_dir(sigo_path);
     }
 
-    // Parse args
+    // Parse args and Run command
     let cli = AppArg::parse();
-    // TODO: separate logics to another mod, and the mod functions return result(err print in main function)
-    match cli.command {
-        Command::Add {
-            description,
-            priority,
-        } => {
-            let new_task = match ReadyTask::new(&cfg, &description, priority) {
-                Ok(task) => task,
-                Err(err) => {
-                    eprintln!("{}", err);
-                    return;
-                }
-            };
-            match ReadyTask::add_task(&cfg, new_task) {
-                Ok(task) => println!("Created sigo {}", task.id),
-                Err(err) => eprintln!("{}", err),
-            }
-        }
-        Command::Modify { id, text, priority } => {
-            let task = match Task::get_by_id(&cfg, id) {
-                Ok(task) => task,
-                Err(err) => {
-                    eprintln!("{}", err);
-                    return;
-                }
-            };
-            match task {
-                Task::Ready(task) => match task.modify(&cfg, &text, priority) {
-                    Ok(task) => println!("Modify sigo '{}'", task.id),
-                    Err(err) => eprintln!("{}", err),
-                },
-                Task::Waiting(task) => match task.modify(&cfg, &text, priority) {
-                    Ok(task) => println!("Modify sigo '{}'", task.id),
-                    Err(err) => eprintln!("{}", err),
-                },
-                Task::Completed(_) => panic!("completed task is not defined by is"),
-            };
-        }
-        Command::Done { id } => {
-            let task = match Task::get_by_id(&cfg, id) {
-                Ok(task) => task,
-                Err(err) => {
-                    eprintln!("{}", err);
-                    return;
-                }
-            };
-            let result = match task {
-                Task::Ready(task) => task.complete(&cfg),
-                Task::Waiting(task) => task.complete(&cfg),
-                Task::Completed(_) => panic!("completed task is not defined by is"),
-            };
-            match result {
-                Ok(task) => println!("Completed sigo '{}'", task.description),
-                Err(err) => eprintln!("{}", err),
-            }
-        }
-        Command::Wait { id } => {
-            let task = match Task::get_by_id(&cfg, id) {
-                Ok(task) => task,
-                Err(err) => {
-                    eprintln!("{}", err);
-                    return;
-                }
-            };
-            match task {
-                Task::Ready(task) => match task.wait(&cfg) {
-                    Ok(task) => {
-                        println!("Waiting sigo {} '{}'", task.id, task.get_main_description())
-                    }
-                    Err(err) => eprintln!("{}", err),
-                },
-                Task::Waiting(task) => {
-                    println!("Already waiting task {}", task.id)
-                }
-                Task::Completed(_task) => {
-                    panic!("get_by_id function doesnot return completed task {}", id);
-                }
-            }
-        }
-        Command::Back { id } => {
-            let task = match Task::get_by_id(&cfg, id) {
-                Ok(task) => task,
-                Err(err) => {
-                    eprintln!("{}", err);
-                    return;
-                }
-            };
-            match task {
-                Task::Ready(task) => {
-                    println!("Already ready sigo {}", task.id);
-                }
-                Task::Waiting(task) => match task.back(&cfg) {
-                    Ok(task) => println!(
-                        "Returning sigo {} '{}'",
-                        task.id,
-                        task.get_main_description()
-                    ),
-                    Err(err) => eprintln!("{}", err),
-                },
-                Task::Completed(_task) => {
-                    panic!("get_by_id function doesnot return completed task {}", id);
-                }
-            }
-        }
-        Command::Annotate { id, text } => {
-            let task = match Task::get_by_id(&cfg, id) {
-                Ok(task) => task,
-                Err(err) => {
-                    eprintln!("{}", err);
-                    return;
-                }
-            };
-            let result = match task {
-                Task::Ready(task) => task.annotate(&cfg, &text),
-                Task::Waiting(task) => task.annotate(&cfg, &text),
-                Task::Completed(_) => {
-                    panic!("get_by_id function doesnot return completed task {}", id)
-                }
-            };
-            match result {
-                Ok(()) => println!("Annotated sigo {} with '{}'", id, text),
-                Err(err) => eprintln!("{}", err),
-            }
-        }
-        Command::List => match ReadyTask::read_tasks(&cfg) {
-            Ok(mut tasks) => {
-                tasks.sort_by(|a, b| a.priority.cmp(&b.priority));
-                println!("{}", tasks_to_string(tasks));
-            }
-            Err(err) => {
-                eprintln!("{}", err);
-            }
-        },
-        Command::Waiting => {
-            match WaitingTask::read_tasks(&cfg) {
-                Ok(mut tasks) => {
-                    tasks.sort_by(|a, b| a.priority.cmp(&b.priority));
-                    println!("{}", tasks_to_string(tasks));
-                }
-                Err(err) => {
-                    eprintln!("{}", err);
-                }
-            };
-        }
+    match command::run(&cfg, cli) {
+        Ok(output) => println!("{}", output),
+        Err(err) => eprintln!("Error: {}", err),
     }
 }
