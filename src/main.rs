@@ -78,7 +78,7 @@ enum Priority {
 
 fn main() {
     // load config.ini
-    let xdg_dirs = xdg::BaseDirectories::with_prefix("sigotorrior").expect("XDG is not used");
+    let xdg_dirs = xdg::BaseDirectories::with_prefix("sigotowarrior").expect("XDG is not used");
     let config_path = xdg_dirs.get_config_file("config.ini");
     let cfg = confy::load_path::<MyConfig>(&config_path).expect("cannot load config.ini");
 
@@ -90,6 +90,7 @@ fn main() {
 
     // Parse args
     let cli = AppArg::parse();
+    // TODO: separate logics to another mod, and the mod functions return result(err print in main function)
     match cli.command {
         Command::Add {
             description,
@@ -115,14 +116,17 @@ fn main() {
                     return;
                 }
             };
-            match task.modify(&cfg, &text, priority) {
-                Ok(task) => println!(
-                    "Modify sigo '{}'",
-                    task.id()
-                        .expect("modify func must return ready or waiting task")
-                ),
-                Err(err) => eprintln!("{}", err),
-            }
+            match task {
+                Task::Ready(task) => match task.modify(&cfg, &text, priority) {
+                    Ok(task) => println!("Modify sigo '{}'", task.id),
+                    Err(err) => eprintln!("{}", err),
+                },
+                Task::Waiting(task) => match task.modify(&cfg, &text, priority) {
+                    Ok(task) => println!("Modify sigo '{}'", task.id),
+                    Err(err) => eprintln!("{}", err),
+                },
+                Task::Completed(_) => panic!("completed task is not defined by is"),
+            };
         }
         Command::Done { id } => {
             let task = match Task::get_by_id(&cfg, id) {
@@ -132,7 +136,12 @@ fn main() {
                     return;
                 }
             };
-            match task.complete(&cfg) {
+            let result = match task {
+                Task::Ready(task) => task.complete(&cfg),
+                Task::Waiting(task) => task.complete(&cfg),
+                Task::Completed(_) => panic!("completed task is not defined by is"),
+            };
+            match result {
                 Ok(task) => println!("Completed sigo '{}'", task.description),
                 Err(err) => eprintln!("{}", err),
             }
@@ -193,7 +202,14 @@ fn main() {
                     return;
                 }
             };
-            match task.annotate(&cfg, &text) {
+            let result = match task {
+                Task::Ready(task) => task.annotate(&cfg, &text),
+                Task::Waiting(task) => task.annotate(&cfg, &text),
+                Task::Completed(_) => {
+                    panic!("get_by_id function doesnot return completed task {}", id)
+                }
+            };
+            match result {
                 Ok(()) => println!("Annotated sigo {} with '{}'", id, text),
                 Err(err) => eprintln!("{}", err),
             }
