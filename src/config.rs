@@ -7,7 +7,7 @@ pub struct MyConfig {
 
 impl ::std::default::Default for MyConfig {
     fn default() -> Self {
-        let xdg_dirs = xdg::BaseDirectories::with_prefix("sigotorrior").expect("XDG is not used");
+        let xdg_dirs = xdg::BaseDirectories::with_prefix("sigotowarrior").expect("XDG is not used");
         let data_dir = xdg_dirs.get_data_home();
         Self {
             data: data_dir
