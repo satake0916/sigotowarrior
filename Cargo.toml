@@ -9,7 +9,7 @@ edition = "2021"
 description = "command-line task management utility for work"
 license = "MIT"
 categories = ["command-line-utilities"]
-repository = "https://github.com/satake0916/sigotorrior"
+repository = "https://github.com/satake0916/sigotowarrior"
 
 [dependencies]
 chrono = "0.4.38"
@@ -21,4 +21,4 @@ tabled = "0.15.0"
 xdg = "2.5.2"
 strum = { version = "0.26", features = ["derive"] }
 strum_macros = "0.26"
-sigo_macro_derive = { path = "./sigo_macro_derive" }
+sigo_macro_derive = { version = "0.1.0", path = "./sigo_macro_derive" }

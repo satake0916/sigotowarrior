@@ -1,7 +1,11 @@
 [package]
 name = "sigo_macro_derive"
 version = "0.1.0"
+authors = ["satake_makoto <satake.software@gmail.com"]
 edition = "2021"
+description = "helper derives for sigo"
+license = "MIT"
+repository = "https://github.com/satake0916/sigotowarrior"
 
 [lib]
 proc-macro = true
