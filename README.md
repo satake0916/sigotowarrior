@@ -2,6 +2,8 @@
 
 Sigotowarrior is a command-line task management utility especially for work.
 
+Sigotowarrior is entirely inspired by [Taskwarrior](https://taskwarrior.org/), but is a more work-oriented tool.
+
 ---
 
 ## A Quick Demonstration
@@ -81,20 +83,23 @@ cargo install sigo
 ## Sub commands
 
 * **sigo add \<description\>**: add the sigo
-  * -p, --priority: set the priority
+  * **-p, --priority**: set the priority
+  * **-w, --waiting**: set the adding sigo waiting
 * **sigo modify \<id\>**: modify the sigo
   * **-t, --text**: modify the description
   * **-p, --priority**: modify the priority
-* **sigo annotate \<id\> --text \<annotation\>**: annotate the sigo with the annotation
+* **sigo annotate \<id\> --text \<annotation\>**: annotate the sigo
 * **sigo wait \<id\>**: change the status of the sigo from ready to waiting
+  * **-t, --text**: annotate the sigo
 * **sigo back \<id\>**: change the status of the sigo from waiting to ready
+  * **-t, --text**: annotate the sigo
 * **sigo done \<id\>**: done the sigo
 * **sigo list**: list ready tasks
 * **sigo waiting**: list waiting tasks
 
-## Author
+## Contributing
 
-satake_makoto
+If you encounter any bugs or have any feature requests, we welcome issues or pull requests.
 
 ## License
 
