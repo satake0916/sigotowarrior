@@ -12,6 +12,7 @@ mod task;
 mod utils;
 
 #[derive(Parser)]
+#[command(author, version, about, long_about = None)]
 struct AppArg {
     #[clap(subcommand)]
     command: Command,
@@ -26,6 +27,10 @@ enum Command {
         /// Priority(H/M/L)
         #[arg(value_enum, short, long, default_value_t = Priority::M)]
         priority: Priority,
+
+        /// Waiting
+        #[arg(short, long)]
+        waiting: bool,
     },
 
     /// Modify sigo
