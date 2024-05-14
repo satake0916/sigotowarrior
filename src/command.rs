@@ -12,9 +12,15 @@ pub fn run(cfg: &MyConfig, args: AppArg) -> Result<String> {
         Command::Add {
             description,
             priority,
+            waiting,
         } => {
             let new_task = ReadyTask::add_task(cfg, ReadyTask::new(cfg, &description, priority)?)?;
-            Ok(format!("Created sigo {}", new_task.id))
+            if waiting {
+                let new_task = new_task.wait(cfg, &None)?;
+                Ok(format!("Created waiting sigo {}", new_task.id))
+            } else {
+                Ok(format!("Created sigo {}", new_task.id))
+            }
         }
         Command::Modify { id, text, priority } => {
             let task = Task::get_by_id(cfg, id)?;
