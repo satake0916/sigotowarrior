@@ -12,6 +12,7 @@ mod task;
 mod utils;
 
 #[derive(Parser)]
+#[command(author, version, about, long_about = None)]
 struct AppArg {
     #[clap(subcommand)]
     command: Command,
