@@ -1,6 +1,6 @@
 [package]
 name = "sigo_macro_derive"
-version = "0.1.2"
+version = "0.1.3"
 authors = ["satake_makoto <satake.software@gmail.com"]
 edition = "2021"
 description = "helper derives for sigo"

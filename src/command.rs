@@ -1,5 +1,6 @@
 use crate::{
     config::MyConfig,
+    display::SigoDisplay,
     error::*,
     task::{ReadyTask, Task, WaitingTask},
     utils::tasks_to_string,
@@ -7,7 +8,7 @@ use crate::{
 };
 
 // TODO: DRY get id and match pattern
-pub fn run(cfg: &MyConfig, args: AppArg) -> Result<String> {
+pub fn run(cfg: &MyConfig, args: AppArg) -> Result<SigoDisplay> {
     match args.command {
         Command::Add {
             description,
@@ -17,9 +18,9 @@ pub fn run(cfg: &MyConfig, args: AppArg) -> Result<String> {
             let new_task = ReadyTask::add_task(cfg, ReadyTask::new(cfg, &description, priority)?)?;
             if waiting {
                 let new_task = new_task.wait(cfg, &None)?;
-                Ok(format!("Created waiting sigo {}", new_task.id))
+                Ok(SigoDisplay::CreateWaitingTask(new_task.id))
             } else {
-                Ok(format!("Created sigo {}", new_task.id))
+                Ok(SigoDisplay::CreateReadyTask(new_task.id))
             }
         }
         Command::Modify { id, text, priority } => {
@@ -27,11 +28,17 @@ pub fn run(cfg: &MyConfig, args: AppArg) -> Result<String> {
             match task {
                 Task::Ready(task) => {
                     task.modify(cfg, &text, priority)?;
-                    Ok(format!("Modify sigo {}", task.id))
+                    Ok(SigoDisplay::ModifyTask(
+                        task.id,
+                        task.get_main_description(),
+                    ))
                 }
                 Task::Waiting(task) => {
                     task.modify(cfg, &text, priority)?;
-                    Ok(format!("Modify sigo {}", task.id))
+                    Ok(SigoDisplay::ModifyTask(
+                        task.id,
+                        task.get_main_description(),
+                    ))
                 }
                 Task::Completed(_) => panic!(),
             }
@@ -41,11 +48,17 @@ pub fn run(cfg: &MyConfig, args: AppArg) -> Result<String> {
             match task {
                 Task::Ready(task) => {
                     task.complete(cfg)?;
-                    Ok(format!("Completed sigo {}", task.id))
+                    Ok(SigoDisplay::CompleteTask(
+                        task.id,
+                        task.get_main_description(),
+                    ))
                 }
                 Task::Waiting(task) => {
                     task.complete(cfg)?;
-                    Ok(format!("Completed sigo {}", task.id))
+                    Ok(SigoDisplay::CompleteTask(
+                        task.id,
+                        task.get_main_description(),
+                    ))
                 }
                 Task::Completed(_) => panic!(),
             }
@@ -55,27 +68,25 @@ pub fn run(cfg: &MyConfig, args: AppArg) -> Result<String> {
             match task {
                 Task::Ready(task) => {
                     let task = task.wait(cfg, &text)?;
-                    Ok(format!(
-                        "Waiting sigo {} '{}'",
-                        task.id,
-                        task.get_main_description()
-                    ))
+                    Ok(SigoDisplay::WaitTask(task.id, task.get_main_description()))
                 }
-                Task::Waiting(task) => Ok(format!("Already waiting sigo {}", task.id)),
+                Task::Waiting(task) => Ok(SigoDisplay::WaitWaitingTask(
+                    task.id,
+                    task.get_main_description(),
+                )),
                 Task::Completed(_) => panic!(),
             }
         }
         Command::Back { id, text } => {
             let task = Task::get_by_id(cfg, id)?;
             match task {
-                Task::Ready(task) => Ok(format!(
-                    "Already ready sigo {} '{}'",
+                Task::Ready(task) => Ok(SigoDisplay::BackReadyTask(
                     task.id,
-                    task.get_main_description()
+                    task.get_main_description(),
                 )),
                 Task::Waiting(task) => {
                     let task = task.back(cfg, &text)?;
-                    Ok(format!("Returning sigo {}", task.id))
+                    Ok(SigoDisplay::BackTask(task.id, task.get_main_description()))
                 }
                 Task::Completed(_) => panic!(),
             }
@@ -85,11 +96,17 @@ pub fn run(cfg: &MyConfig, args: AppArg) -> Result<String> {
             match task {
                 Task::Ready(task) => {
                     task.annotate(cfg, &text)?;
-                    Ok(format!("Annotated sigo {}", task.id))
+                    Ok(SigoDisplay::AnnotateTask(
+                        task.id,
+                        task.get_main_description(),
+                    ))
                 }
                 Task::Waiting(task) => {
                     task.annotate(cfg, &text)?;
-                    Ok(format!("Annotated sigo {}", task.id))
+                    Ok(SigoDisplay::AnnotateTask(
+                        task.id,
+                        task.get_main_description(),
+                    ))
                 }
                 Task::Completed(_) => panic!(),
             }
@@ -97,12 +114,12 @@ pub fn run(cfg: &MyConfig, args: AppArg) -> Result<String> {
         Command::List => {
             let mut tasks = ReadyTask::read_tasks(cfg)?;
             tasks.sort_by(|a, b| a.priority.cmp(&b.priority));
-            Ok(tasks_to_string(tasks))
+            Ok(SigoDisplay::ListReadyTasks(tasks_to_string(tasks)))
         }
         Command::Waiting => {
             let mut tasks = WaitingTask::read_tasks(cfg)?;
             tasks.sort_by(|a, b| a.priority.cmp(&b.priority));
-            Ok(tasks_to_string(tasks))
+            Ok(SigoDisplay::ListWaitingTasks(tasks_to_string(tasks)))
         }
     }
 }

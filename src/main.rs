@@ -7,6 +7,7 @@ use strum::Display;
 
 mod command;
 mod config;
+mod display;
 mod error;
 mod task;
 mod utils;
@@ -107,7 +108,7 @@ fn main() {
     // Parse args and Run command
     let cli = AppArg::parse();
     match command::run(&cfg, cli) {
-        Ok(output) => println!("{}", output),
+        Ok(output) => println!("{}", output.display_minimun()),
         Err(err) => eprintln!("Error: {}", err),
     }
 }
