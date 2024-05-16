@@ -108,7 +108,7 @@ fn main() {
     // Parse args and Run command
     let cli = AppArg::parse();
     match command::run(&cfg, cli) {
-        Ok(output) => println!("{}", output.display_minimun()),
+        Ok(output) => println!("{}", output.display_simple()),
         Err(err) => eprintln!("Error: {}", err),
     }
 }
