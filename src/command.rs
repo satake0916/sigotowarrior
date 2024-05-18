@@ -3,7 +3,6 @@ use crate::{
     display::SigoDisplay,
     error::*,
     task::{ReadyTask, Task, WaitingTask},
-    utils::tasks_to_string,
     AppArg, Command,
 };
 
@@ -114,12 +113,12 @@ pub fn run(cfg: &MyConfig, args: AppArg) -> Result<SigoDisplay> {
         Command::List => {
             let mut tasks = ReadyTask::read_tasks(cfg)?;
             tasks.sort_by(|a, b| a.priority.cmp(&b.priority));
-            Ok(SigoDisplay::ListReadyTasks(tasks_to_string(tasks)))
+            Ok(SigoDisplay::ListReadyTasks(tasks))
         }
         Command::Waiting => {
             let mut tasks = WaitingTask::read_tasks(cfg)?;
             tasks.sort_by(|a, b| a.priority.cmp(&b.priority));
-            Ok(SigoDisplay::ListWaitingTasks(tasks_to_string(tasks)))
+            Ok(SigoDisplay::ListWaitingTasks(tasks))
         }
     }
 }

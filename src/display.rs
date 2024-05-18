@@ -8,11 +8,13 @@ pub enum SigoDisplay {
     BackTask(u32, String),
     BackReadyTask(u32, String),
     AnnotateTask(u32, String),
-    ListReadyTasks(String),
-    ListWaitingTasks(String),
+    ListReadyTasks(Vec<ReadyTask>),
+    ListWaitingTasks(Vec<WaitingTask>),
 }
 
 use std::fmt;
+
+use crate::{task::{ReadyTask, WaitingTask}, utils::tasks_to_string};
 
 impl SigoDisplay {
     pub fn display_minimun(&self) -> DisplayMinimum {
@@ -55,11 +57,11 @@ impl fmt::Display for DisplayMinimum<'_> {
             SigoDisplay::AnnotateTask(id, description) => {
                 writeln!(f, "Annotated sigo {} '{}'", id, description)
             }
-            SigoDisplay::ListReadyTasks(tasks_str) => {
-                writeln!(f, "{}", tasks_str)
+            SigoDisplay::ListReadyTasks(tasks) => {
+                writeln!(f, "{}", tasks_to_string(tasks))
             }
-            SigoDisplay::ListWaitingTasks(tasks_str) => {
-                writeln!(f, "{}", tasks_str)
+            SigoDisplay::ListWaitingTasks(tasks) => {
+                writeln!(f, "{}", tasks_to_string(tasks))
             }
         }
     }
@@ -103,11 +105,35 @@ impl fmt::Display for DisplaySimple<'_> {
             SigoDisplay::AnnotateTask(id, description) => {
                 writeln!(f, "Annotated sigo {} '{}'", id, description)
             }
-            SigoDisplay::ListReadyTasks(tasks_str) => {
-                writeln!(f, "{}", tasks_str)
+            SigoDisplay::ListReadyTasks(tasks) => {
+                let tasks_len = tasks.len();
+                if tasks_len == 0 {
+                    writeln!(f, "No sigos! Woot woot!
+    (use \"sigo add\" to add sigo)
+    (use \"sigo waiting\" to list waiting sigos)")
+                } else {
+                writeln!(f, "{}
+
+{} sigos
+    (use \"sigo done\" to complete sigo)
+    (use \"sigo waiting\" to list waiting sigos)"
+    , tasks_to_string(tasks), tasks.len())
+                }
             }
-            SigoDisplay::ListWaitingTasks(tasks_str) => {
-                writeln!(f, "{}", tasks_str)
+            SigoDisplay::ListWaitingTasks(tasks) => {
+                let tasks_len = tasks.len();
+                if tasks_len == 0 {
+                    writeln!(f, "No matches.
+    (use \"sigo add\" to add sigo)
+    (use \"sigo list\" to list ready sigos)")
+                } else {
+                writeln!(f, "{}
+
+{} sigos
+    (use \"sigo done\" to complete sigo)
+    (use \"sigo list\" to list ready sigos)"
+    , tasks_to_string(tasks), tasks.len())
+                }
             }
         }
     }

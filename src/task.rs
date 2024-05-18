@@ -19,8 +19,8 @@ pub enum Task {
 #[derive(Tabled, Serialize, Deserialize, Debug, Clone, FiledTask, IdAssignedTask)]
 pub struct ReadyTask {
     pub id: u32,
-    #[tabled(rename = "P")]
-    pub priority: Priority,
+    #[tabled(rename = "P", display_with = "utils::display_option_priority")]
+    pub priority: Option<Priority>,
     #[tabled(display_with = "utils::display_option_vec_string")]
     pub description: Option<Vec<String>>,
 }
@@ -28,8 +28,8 @@ pub struct ReadyTask {
 #[derive(Tabled, Serialize, Deserialize, Debug, Clone, FiledTask, IdAssignedTask)]
 pub struct WaitingTask {
     pub id: u32,
-    #[tabled(rename = "P")]
-    pub priority: Priority,
+    #[tabled(rename = "P", display_with = "utils::display_option_priority")]
+    pub priority: Option<Priority>,
     #[tabled(display_with = "utils::display_option_vec_string")]
     pub description: Option<Vec<String>>,
 }
@@ -68,7 +68,7 @@ impl Task {
 impl ReadyTask {
     const FILE_NAME: &'static str = "ready_tasks";
 
-    pub fn new(cfg: &MyConfig, description: &str, priority: Priority) -> Result<Self, SigoError> {
+    pub fn new(cfg: &MyConfig, description: &str, priority: Option<Priority>) -> Result<Self, SigoError> {
         let id = Task::issue_task_id(cfg)?;
         Ok(Self {
             id,

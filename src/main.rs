@@ -26,8 +26,8 @@ enum Command {
         description: String,
 
         /// Priority(H/M/L)
-        #[arg(value_enum, short, long, default_value_t = Priority::M)]
-        priority: Priority,
+        #[arg(value_enum, short, long)]
+        priority: Option<Priority>,
 
         /// Waiting
         #[arg(short, long)]

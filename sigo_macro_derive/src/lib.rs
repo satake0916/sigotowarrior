@@ -187,7 +187,7 @@ fn generate_idassignedtask(derive_input: &DeriveInput) -> Result<TokenStream, sy
                 let new_task = Self {
                     id: self.id,
                     description: Some(description),
-                    priority: priority.unwrap_or(self.priority),
+                    priority: priority.or(self.priority),
                 };
                 after_tasks.push(new_task.clone());
                 Self::write_tasks(cfg, after_tasks)?;
