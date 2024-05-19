@@ -1,10 +1,9 @@
 use std::{collections::HashMap, fs, io::Write, path::PathBuf};
 
 use tabled::{
-    grid::config::HorizontalLine,
+    grid::{config::{ColoredConfig, Entity, HorizontalLine}, records::{vec_records::{CellInfo, VecRecords}, ExactRecords, Records}},
     settings::{
-        object::{Columns, Rows},
-        Alignment, Color, Modify, Padding, Theme, Width,
+        object::{Columns, Rows}, Alignment, CellOption, Color, Format, Modify, Padding, Theme, Width
     },
     Table, Tabled,
 };
@@ -30,9 +29,38 @@ where
         .modify(Rows::new(..), Padding::new(0, 0, 0, 0))
         .with(Modify::new(Columns::single(0)).with(Alignment::right()))
         .with(Modify::new(Columns::single(2)).with(Width::wrap(width / 2)))
-        .with(Modify::new(Rows::first()).with(Color::BOLD))
+        .with(Modify::new(Rows::new(1..)).with(PriorityColorization))
         .with(style)
         .to_string()
+}
+
+#[derive(Clone)]
+struct PriorityColorization;
+
+impl CellOption<VecRecords<CellInfo<String>>, ColoredConfig> for PriorityColorization {
+    fn change(
+        self,
+        records: &mut VecRecords<CellInfo<String>>,
+        cfg: &mut ColoredConfig,
+        entity: Entity,
+    ) {
+        let (count_rows, count_cols) = (records.count_rows(), records.count_columns());
+
+        for (row, col) in entity.iter(count_rows, count_cols) {
+            let priority = records[row][1].as_ref();
+            let color = priority_color(priority);
+            cfg.set_color(Entity::Cell(row, col), color.into());
+        }
+    }
+}
+
+fn priority_color(priority: &str) -> Color {
+    match priority {
+        "H" => Color::BOLD,
+        "M" => Color::default(),
+        "L" => Color::new("\u{1b}[2m", "\u{1b}[22m"),
+        _ => Color::default(),
+    }
 }
 
 pub fn create_file_if_not_exist(path: &PathBuf) -> Result<(), SigoError> {
