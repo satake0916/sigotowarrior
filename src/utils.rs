@@ -1,20 +1,23 @@
-use std::{collections::HashMap, fs, io::Write, ops::Range, path::PathBuf};
+use std::{collections::HashMap, fs, io::Write, path::PathBuf};
 
 use tabled::{
     grid::config::HorizontalLine,
-    settings::{object::{Columns, Rows}, Alignment, Color, Format, Modify, Padding, Theme, Width},
-    Table, Tabled
+    settings::{
+        object::{Columns, Rows},
+        Alignment, Color, Modify, Padding, Theme, Width,
+    },
+    Table, Tabled,
 };
 use terminal_size::{terminal_size, Height as TerminalHeight, Width as TerminalWidth};
 
-use crate::{error::SigoError, task::{ReadyTask, Task}, Priority};
+use crate::{error::SigoError, Priority};
 
 // TODO priority high is bold, low is toumei
 // this could be macro, i donot know...
 pub fn tasks_to_string<I, T>(tasks: I) -> String
 where
     I: IntoIterator<Item = T>,
-    T: Tabled
+    T: Tabled,
 {
     let (width, _height) = get_terminal_size();
     let mut style = Theme::default();
@@ -42,21 +45,16 @@ pub fn create_file_if_not_exist(path: &PathBuf) -> Result<(), SigoError> {
     Ok(())
 }
 
-pub fn display_option_vec_string(o: &Option<Vec<String>>) -> String {
-    match o {
-        Some(v) => v.join("\n* "),
-        None => "No description".to_owned(),
-    }
+pub fn display_vec_string(v: &[String]) -> String {
+    v.join("\n* ")
 }
 
 pub fn display_option_priority(o: &Option<Priority>) -> String {
     match o {
         Some(p) => p.to_string(),
-        None => "".to_string()
+        None => "".to_string(),
     }
 }
-
-
 
 fn get_terminal_size() -> (usize, usize) {
     let (TerminalWidth(width), TerminalHeight(height)) =

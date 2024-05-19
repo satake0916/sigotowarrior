@@ -5,10 +5,12 @@ use config::MyConfig;
 use serde::{Deserialize, Serialize};
 use strum::Display;
 
+mod active_params;
 mod command;
 mod config;
 mod display;
 mod error;
+mod file;
 mod task;
 mod utils;
 
@@ -37,10 +39,6 @@ enum Command {
     /// Modify sigo
     Modify {
         id: u32,
-
-        /// Description text
-        #[arg(short, long)]
-        text: Option<String>,
 
         /// Priority(H/M/L)
         #[arg(value_enum, short, long)]

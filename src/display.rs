@@ -14,7 +14,10 @@ pub enum SigoDisplay {
 
 use std::fmt;
 
-use crate::{task::{ReadyTask, WaitingTask}, utils::tasks_to_string};
+use crate::{
+    task::{ReadyTask, WaitingTask},
+    utils::tasks_to_string,
+};
 
 impl SigoDisplay {
     pub fn display_minimun(&self) -> DisplayMinimum {
@@ -108,31 +111,45 @@ impl fmt::Display for DisplaySimple<'_> {
             SigoDisplay::ListReadyTasks(tasks) => {
                 let tasks_len = tasks.len();
                 if tasks_len == 0 {
-                    writeln!(f, "No sigos! Woot woot!
+                    writeln!(
+                        f,
+                        "No sigos! Woot woot!
     (use \"sigo add\" to add sigo)
-    (use \"sigo waiting\" to list waiting sigos)")
+    (use \"sigo waiting\" to list waiting sigos)"
+                    )
                 } else {
-                writeln!(f, "{}
+                    writeln!(
+                        f,
+                        "{}
 
 {} sigos
     (use \"sigo done\" to complete sigo)
-    (use \"sigo waiting\" to list waiting sigos)"
-    , tasks_to_string(tasks), tasks.len())
+    (use \"sigo waiting\" to list waiting sigos)",
+                        tasks_to_string(tasks),
+                        tasks.len()
+                    )
                 }
             }
             SigoDisplay::ListWaitingTasks(tasks) => {
                 let tasks_len = tasks.len();
                 if tasks_len == 0 {
-                    writeln!(f, "No matches.
+                    writeln!(
+                        f,
+                        "No matches.
     (use \"sigo add\" to add sigo)
-    (use \"sigo list\" to list ready sigos)")
+    (use \"sigo list\" to list ready sigos)"
+                    )
                 } else {
-                writeln!(f, "{}
+                    writeln!(
+                        f,
+                        "{}
 
 {} sigos
     (use \"sigo done\" to complete sigo)
-    (use \"sigo list\" to list ready sigos)"
-    , tasks_to_string(tasks), tasks.len())
+    (use \"sigo list\" to list ready sigos)",
+                        tasks_to_string(tasks),
+                        tasks.len()
+                    )
                 }
             }
         }
