@@ -1,9 +1,16 @@
 use std::{collections::HashMap, fs, io::Write, path::PathBuf};
 
 use tabled::{
-    grid::{config::{ColoredConfig, Entity, HorizontalLine}, records::{vec_records::{CellInfo, VecRecords}, ExactRecords, Records}},
+    grid::{
+        config::{ColoredConfig, Entity, HorizontalLine},
+        records::{
+            vec_records::{CellInfo, VecRecords},
+            ExactRecords, Records,
+        },
+    },
     settings::{
-        object::{Columns, Rows}, Alignment, CellOption, Color, Format, Modify, Padding, Theme, Width
+        object::{Columns, Rows},
+        Alignment, CellOption, Color, Modify, Padding, Theme, Width,
     },
     Table, Tabled,
 };

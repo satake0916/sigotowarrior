@@ -12,20 +12,20 @@ pub enum SigoDisplay {
     ListWaitingTasks(Vec<WaitingTask>),
 }
 
-use std::fmt;
+use std::fmt::{self, Display};
 
 use crate::{
+    config::{Mode, MyConfig},
     task::{ReadyTask, WaitingTask},
     utils::tasks_to_string,
 };
 
 impl SigoDisplay {
-    pub fn display_minimun(&self) -> DisplayMinimum {
-        DisplayMinimum(self)
-    }
-
-    pub fn display_simple(&self) -> DisplaySimple {
-        DisplaySimple(self)
+    pub fn display<'a>(&'a self, cfg: &MyConfig) -> Box<dyn Display + 'a> {
+        match cfg.mode {
+            Mode::Minimum => Box::new(DisplayMinimum(self)),
+            Mode::Simple => Box::new(DisplaySimple(self)),
+        }
     }
 }
 
@@ -77,7 +77,7 @@ impl fmt::Display for DisplaySimple<'_> {
             SigoDisplay::CreateReadyTask(id) => {
                 writeln!(
                     f,
-                    "✅ Created sigo {0}. Good Luck!
+                    "✅ Created sigo {0}.
 
     (use \"sigo done {0}\" to complete sigo)
     (use \"sigo wait {0}\" to change sigo waiting)",
@@ -85,28 +85,48 @@ impl fmt::Display for DisplaySimple<'_> {
                 )
             }
             SigoDisplay::CreateWaitingTask(id) => {
-                writeln!(f, "Created waiting sigo {}", id)
+                writeln!(
+                    f,
+                    "✅ Created waiting sigo {0}.
+
+    (use \"sigo done {0}\" to complete sigo)
+    (use \"sigo back {0}\" to change sigo ready)",
+                    id
+                )
             }
             SigoDisplay::ModifyTask(id, description) => {
-                writeln!(f, "Modify sigo {} '{}'", id, description)
+                writeln!(
+                    f,
+                    "✅ Modify sigo {0} '{1}'.
+
+    (use \"sigo done {0}\" to complete sigo)",
+                    id, description
+                )
             }
             SigoDisplay::CompleteTask(id, description) => {
-                writeln!(f, "Complete sigo {} '{}'", id, description)
+                writeln!(
+                    f,
+                    "✅ Complete sigo {} '{}'.
+
+    (use \"sigo list\" to list ready sigos)
+    (use \"sigo add\" to add sigo)",
+                    id, description
+                )
             }
             SigoDisplay::WaitTask(id, description) => {
-                writeln!(f, "Waiting sigo {} '{}'", id, description)
+                writeln!(f, "✅ Waiting sigo {} '{}'.", id, description)
             }
             SigoDisplay::WaitWaitingTask(id, description) => {
-                writeln!(f, "Already waiting sigo {} '{}'", id, description)
+                writeln!(f, "✅ Already waiting sigo {} '{}'.", id, description)
             }
             SigoDisplay::BackTask(id, description) => {
-                writeln!(f, "Returning sigo {} '{}'", id, description)
+                writeln!(f, "✅ Returning sigo {} '{}'.", id, description)
             }
             SigoDisplay::BackReadyTask(id, description) => {
-                writeln!(f, "Already ready sigo {} '{}'", id, description)
+                writeln!(f, "✅ Already ready sigo {} '{}'.", id, description)
             }
             SigoDisplay::AnnotateTask(id, description) => {
-                writeln!(f, "Annotated sigo {} '{}'", id, description)
+                writeln!(f, "✅ Annotated sigo {} '{}'.", id, description)
             }
             SigoDisplay::ListReadyTasks(tasks) => {
                 let tasks_len = tasks.len();
