@@ -85,9 +85,11 @@ cargo install sigo
 * **sigo add \<description\>**: add the sigo
   * **-p, --priority**: set the priority
   * **-w, --waiting**: set the adding sigo waiting
+  * **-d, --due**: set due date
 * **sigo modify \<id\>**: modify the sigo
   * **-t, --text**: modify the description
   * **-p, --priority**: modify the priority
+  * **-d, --due**: set due date
 * **sigo annotate \<id\> --text \<annotation\>**: annotate the sigo
 * **sigo wait \<id\>**: change the status of the sigo from ready to waiting
   * **-t, --text**: annotate the sigo
