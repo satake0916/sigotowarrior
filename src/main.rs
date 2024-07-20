@@ -1,5 +1,6 @@
 use std::{fs, path::PathBuf};
 
+use chrono::NaiveDate;
 use clap::{Parser, Subcommand, ValueEnum};
 use config::MyConfig;
 use serde::{Deserialize, Serialize};
@@ -8,6 +9,7 @@ use strum::Display;
 mod active_params;
 mod command;
 mod config;
+mod date;
 mod display;
 mod error;
 mod file;
@@ -34,6 +36,10 @@ enum Command {
         /// Waiting
         #[arg(short, long)]
         waiting: bool,
+
+        /// Due date
+        #[arg(short, long, value_parser = date::validate_date_str)]
+        due: Option<NaiveDate>,
     },
 
     /// Modify sigo
@@ -43,6 +49,10 @@ enum Command {
         /// Priority(H/M/L)
         #[arg(value_enum, short, long)]
         priority: Option<Priority>,
+
+        /// Due date
+        #[arg(short, long, value_parser = date::validate_date_str)]
+        due: Option<NaiveDate>,
     },
 
     /// Done sigo

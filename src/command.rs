@@ -14,10 +14,10 @@ pub fn run(cfg: &MyConfig, args: AppArg) -> Result<SigoDisplay> {
             description,
             priority,
             waiting,
+            due,
         } => {
             let new_task =
-                add_task::<ReadyTask>(cfg, ReadyTask::new(cfg, &description, priority)?)?;
-            // let new_task = ReadyTask::add_task(cfg, ReadyTask::new(cfg, &description, priority)?)?;
+                add_task::<ReadyTask>(cfg, ReadyTask::new(cfg, &description, priority, due)?)?;
             if waiting {
                 let new_task = new_task.wait(cfg, &None)?;
                 Ok(SigoDisplay::CreateWaitingTask(new_task.active_params.id))
@@ -25,18 +25,18 @@ pub fn run(cfg: &MyConfig, args: AppArg) -> Result<SigoDisplay> {
                 Ok(SigoDisplay::CreateReadyTask(new_task.active_params.id))
             }
         }
-        Command::Modify { id, priority } => {
+        Command::Modify { id, priority, due } => {
             let task = Task::get_by_id(cfg, id)?;
             match task {
                 Task::Ready(task) => {
-                    task.modify(cfg, priority)?;
+                    task.modify(cfg, priority, due)?;
                     Ok(SigoDisplay::ModifyTask(
                         task.active_params.id,
                         task.active_params.get_primary_description(),
                     ))
                 }
                 Task::Waiting(task) => {
-                    task.modify(cfg, priority)?;
+                    task.modify(cfg, priority, due)?;
                     Ok(SigoDisplay::ModifyTask(
                         task.active_params.id,
                         task.active_params.get_primary_description(),

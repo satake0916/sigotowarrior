@@ -1,5 +1,6 @@
 use std::{io::Write, path::PathBuf};
 
+use chrono::NaiveDate;
 use serde::{Deserialize, Serialize};
 
 use crate::{
@@ -80,7 +81,7 @@ pub trait ActiveFilable: Filable {
     fn get_id(&self) -> u32;
     fn get_description(&self) -> Vec<String>;
     fn add_annotation(&self, text: &str) -> Self;
-    fn modify_params(&self, priority: Option<Priority>) -> Self;
+    fn modify_params(&self, priority: Option<Priority>, due: Option<NaiveDate>) -> Self;
 
     fn complete(&self, cfg: &MyConfig) -> Result<CompletedTask> {
         delete_by_id::<Self>(cfg, self.get_id())?;
@@ -103,13 +104,18 @@ pub trait ActiveFilable: Filable {
         Ok(annotated_task)
     }
 
-    fn modify(&self, cfg: &MyConfig, priority: Option<Priority>) -> Result<Self> {
+    fn modify(
+        &self,
+        cfg: &MyConfig,
+        priority: Option<Priority>,
+        due: Option<NaiveDate>,
+    ) -> Result<Self> {
         let before_tasks = read_tasks::<Self>(cfg)?;
         let mut after_tasks = before_tasks
             .into_iter()
             .filter(|t| t.get_id() != self.get_id())
             .collect::<Vec<Self>>();
-        let modified_task = self.modify_params(priority);
+        let modified_task = self.modify_params(priority, due);
         after_tasks.push(modified_task.clone());
         write_tasks::<Self>(cfg, after_tasks)?;
         Ok(modified_task)
@@ -155,9 +161,9 @@ impl ActiveFilable for ReadyTask {
         }
     }
 
-    fn modify_params(&self, priority: Option<Priority>) -> Self {
+    fn modify_params(&self, priority: Option<Priority>, due: Option<NaiveDate>) -> Self {
         ReadyTask {
-            active_params: self.active_params.modify_priority(priority),
+            active_params: self.active_params.modify_priority(priority).modify_due(due),
         }
     }
 }
@@ -177,9 +183,9 @@ impl ActiveFilable for WaitingTask {
         }
     }
 
-    fn modify_params(&self, priority: Option<Priority>) -> Self {
+    fn modify_params(&self, priority: Option<Priority>, due: Option<NaiveDate>) -> Self {
         WaitingTask {
-            active_params: self.active_params.modify_priority(priority),
+            active_params: self.active_params.modify_priority(priority).modify_due(due),
         }
     }
 }

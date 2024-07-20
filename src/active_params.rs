@@ -1,3 +1,4 @@
+use chrono::NaiveDate;
 use serde::Deserialize;
 use serde::Serialize;
 use tabled::Tabled;
@@ -12,6 +13,8 @@ pub struct ActiveParams {
     pub priority: Option<Priority>,
     #[tabled(display_with = "utils::display_vec_string")]
     pub description: Vec<String>,
+    #[tabled(display_with = "utils::display_option_date")]
+    pub due: Option<NaiveDate>,
 }
 
 impl ActiveParams {
@@ -29,6 +32,7 @@ impl ActiveParams {
             id: self.id,
             description,
             priority: self.priority,
+            due: self.due,
         }
     }
 
@@ -37,6 +41,16 @@ impl ActiveParams {
             id: self.id,
             description: self.description.clone(),
             priority: priority.or(self.priority),
+            due: self.due,
+        }
+    }
+
+    pub fn modify_due(&self, due: Option<NaiveDate>) -> Self {
+        Self {
+            id: self.id,
+            description: self.description.clone(),
+            priority: self.priority,
+            due: due.or(self.due),
         }
     }
 }

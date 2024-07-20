@@ -1,5 +1,6 @@
 use std::{collections::HashMap, fs, io::Write, path::PathBuf};
 
+use chrono::NaiveDate;
 use tabled::{
     grid::{
         config::{ColoredConfig, Entity, HorizontalLine},
@@ -87,6 +88,13 @@ pub fn display_vec_string(v: &[String]) -> String {
 pub fn display_option_priority(o: &Option<Priority>) -> String {
     match o {
         Some(p) => p.to_string(),
+        None => "".to_string(),
+    }
+}
+
+pub fn display_option_date(o: &Option<NaiveDate>) -> String {
+    match o {
+        Some(nd) => nd.format("%Y-%m-%d").to_string(),
         None => "".to_string(),
     }
 }

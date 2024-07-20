@@ -1,5 +1,6 @@
 use std::collections::HashSet;
 
+use chrono::NaiveDate;
 use serde::{Deserialize, Serialize};
 use tabled::Tabled;
 
@@ -64,6 +65,7 @@ impl ReadyTask {
         cfg: &MyConfig,
         description: &str,
         priority: Option<Priority>,
+        due: Option<NaiveDate>,
     ) -> Result<Self, SigoError> {
         let id = Task::issue_task_id(cfg)?;
         Ok(Self {
@@ -71,6 +73,7 @@ impl ReadyTask {
                 id,
                 description: vec![description.to_owned()],
                 priority,
+                due,
             },
         })
     }
