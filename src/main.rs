@@ -1,13 +1,18 @@
 use std::{fs, path::PathBuf};
 
+use chrono::NaiveDate;
 use clap::{Parser, Subcommand, ValueEnum};
 use config::MyConfig;
 use serde::{Deserialize, Serialize};
 use strum::Display;
 
+mod active_params;
 mod command;
 mod config;
+mod date;
+mod display;
 mod error;
+mod file;
 mod task;
 mod utils;
 
@@ -25,25 +30,29 @@ enum Command {
         description: String,
 
         /// Priority(H/M/L)
-        #[arg(value_enum, short, long, default_value_t = Priority::M)]
-        priority: Priority,
+        #[arg(value_enum, short, long)]
+        priority: Option<Priority>,
 
         /// Waiting
         #[arg(short, long)]
         waiting: bool,
+
+        /// Due date
+        #[arg(short, long, value_parser = date::validate_date_str)]
+        due: Option<NaiveDate>,
     },
 
     /// Modify sigo
     Modify {
         id: u32,
 
-        /// Description text
-        #[arg(short, long)]
-        text: Option<String>,
-
         /// Priority(H/M/L)
         #[arg(value_enum, short, long)]
         priority: Option<Priority>,
+
+        /// Due date
+        #[arg(short, long, value_parser = date::validate_date_str)]
+        due: Option<NaiveDate>,
     },
 
     /// Done sigo
@@ -107,7 +116,9 @@ fn main() {
     // Parse args and Run command
     let cli = AppArg::parse();
     match command::run(&cfg, cli) {
-        Ok(output) => println!("{}", output),
+        Ok(output) => {
+            println!("{}", output.display(&cfg));
+        }
         Err(err) => eprintln!("Error: {}", err),
     }
 }

@@ -3,6 +3,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Serialize, Deserialize)]
 pub struct MyConfig {
     pub data: String,
+    pub mode: Mode,
 }
 
 impl ::std::default::Default for MyConfig {
@@ -14,6 +15,13 @@ impl ::std::default::Default for MyConfig {
                 .into_os_string()
                 .into_string()
                 .expect("XDG_DATA_HOME is not set"),
+            mode: Mode::Simple,
         }
     }
+}
+
+#[derive(Serialize, Deserialize)]
+pub enum Mode {
+    Minimum,
+    Simple,
 }
